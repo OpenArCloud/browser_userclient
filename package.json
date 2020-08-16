@@ -1,0 +1,26 @@
+{
+  "name": "svelte-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "routify -c my-server",
+    "my-server": "rollup -c -w",
+    "start": "sirv public --single  --http2 --key localhost.key --cert localhost.cert --host"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^12.0.0",
+    "@rollup/plugin-node-resolve": "^8.0.0",
+    "@rollup/plugin-replace": "^2.3.3",
+    "@sveltech/routify": "^1.9.7",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^2.3.4",
+    "rollup-plugin-livereload": "^1.0.0",
+    "rollup-plugin-svelte": "^5.0.3",
+    "rollup-plugin-terser": "^5.1.2",
+    "svelte": "^3.0.0"
+  },
+  "dependencies": {
+    "h3-js": "^3.6.4",
+    "sirv-cli": "^1.0.0"
+  }
+}
