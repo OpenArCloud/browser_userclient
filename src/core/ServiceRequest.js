@@ -1,3 +1,6 @@
+// (c) 2020 Open AR Cloud
+// This code is licensed under MIT license (see LICENSE.md for details)
+
 /*
     Main access point to the spatial discovery services of the Open Spatial Computing Platform.
 */

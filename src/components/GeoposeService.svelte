@@ -1,3 +1,6 @@
+// (c) 2020 Open AR Cloud
+// This code is licensed under MIT license (see LICENSE.md for details)
+
 <!--
     Requests GeoPose services available around the provided location.
 -->
