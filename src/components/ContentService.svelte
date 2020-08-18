@@ -22,7 +22,7 @@
 </style>
 
 <script>
-    import { requestServices } from '../core/ServiceRequest.js';
+    import { requestServices } from 'ssd-access';
 
     export let countryCode;
     export let h3Index;
