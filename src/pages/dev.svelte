@@ -1,5 +1,7 @@
-// (c) 2020 Open AR Cloud
-// This code is licensed under MIT license (see LICENSE.md for details)
+<!--
+  (c) 2020 Open AR Cloud
+  This code is licensed under MIT license (see LICENSE.md for details)
+-->
 
 <!--
     Second part of the app allowing access to every single step of the service and content discovery workflow.

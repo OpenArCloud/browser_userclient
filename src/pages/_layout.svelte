@@ -1,5 +1,7 @@
-// (c) 2020 Open AR Cloud
-// This code is licensed under MIT license (see LICENSE.md for details)
+<!--
+  (c) 2020 Open AR Cloud
+  This code is licensed under MIT license (see LICENSE.md for details)
+-->
 
 <script>
     import { isActive, url } from "@sveltech/routify";
