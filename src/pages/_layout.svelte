@@ -10,7 +10,7 @@
             [
                 ['/index', 'Home'],
                 ['/user', 'User'],
-                ['/dev', 'Developer'],
+                ['/dev/', 'Developer'],
             ]
 </script>
 
@@ -42,7 +42,7 @@
 </style>
 
 <header>
-    <h1><img id="oarc_logo" src="OARC_Logo_without_BG.png" alt="Open AR Cloud header image"/></h1>
+    <h1><img id="oarc_logo" src="/OARC_Logo_without_BG.png" alt="Open AR Cloud header image"/></h1>
 
     <nav>
         {#each links as [path, name]}

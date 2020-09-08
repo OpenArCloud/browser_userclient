@@ -22,16 +22,18 @@
 </style>
 
 <script>
+    import { get } from 'svelte/store';
+
+    import { countryCode, h3Index, selectedContentService } from '../core/store';
     import { requestServices } from 'ssd-access';
 
-    export let countryCode;
-    export let h3Index;
 
     let contentServices = [];
-    let selectedContentService = null;
 
     function handleContentServices() {
-        requestServices(countryCode, h3Index)
+        contentServices = [];
+
+        requestServices(get(countryCode), get(h3Index))
             .then(data => {
                 data.forEach((item) => {
                     item.services.forEach((service)=> {
@@ -57,14 +59,14 @@
     <div>
         <ul>
             {#each contentServices as service}
-                <li class="{selectedContentService === service.id ? 'active' : ''}">
-                    <input type="radio" id="content{service.id}" bind:group={selectedContentService} value="{service.id}"/>
+                <li class="{$selectedContentService.id === service.id ? 'active' : ''}">
+                    <input type="radio" id="content{service.id}" bind:group={$selectedContentService.id} value="{service.id}"/>
                     <label for="content{service.id}">{service.provider}</label>
                 </li>
             {/each}
         </ul>
 
         <button on:click={handleContentServices}>Get</button>
-        <button disabled="{selectedContentService == null}" on:click={positionContent}>Use</button>
+        <button disabled="{$selectedContentService.id === null}" on:click={positionContent}>Use</button>
     </div>
 </fieldset>

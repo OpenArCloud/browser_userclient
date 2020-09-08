@@ -19,20 +19,17 @@
 </style>
 
 <script>
-    import CurrentLocation from '../components/CurrentLocation.svelte';
-    import GeoposeService from '../components/GeoposeService.svelte';
-    import ContentService from '../components/ContentService.svelte';
-    import ArDisplay from '../components/ArDisplay.svelte';
-
-    let countryCode;
-    let h3Index;
+    import CurrentLocation from '../../components/CurrentLocation.svelte';
+    import GeoposeService from '../../components/GeoposeService.svelte';
+    import ContentService from '../../components/ContentService.svelte';
+    import ArDisplay from '../../components/ArDisplay.svelte';
 </script>
 
 
 <h2>Open AR Cloud access workflow</h2>
 <p>Access every step of the OSCP services workflow separately</p>
 
-<CurrentLocation bind:countryCode bind:h3Index/>
-<GeoposeService countryCode="{countryCode}" h3Index="{h3Index}"/>
-<ContentService countryCode="{countryCode}" h3Index="{h3Index}"/>
+<CurrentLocation />
+<GeoposeService />
+<ContentService />
 <ArDisplay/>
