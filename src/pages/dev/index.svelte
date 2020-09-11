@@ -15,9 +15,6 @@
     <script src="https://unpkg.com/h3-js"></script>
 </svelte:head>
 
-<style>
-</style>
-
 <script>
     import CurrentLocation from '../../components/CurrentLocation.svelte';
     import GeoposeService from '../../components/GeoposeService.svelte';

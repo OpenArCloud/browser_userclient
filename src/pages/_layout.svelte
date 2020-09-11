@@ -16,7 +16,7 @@
 
 <style>
     header {
-        padding: 6vw;
+        padding: 3rem;
         background: linear-gradient(180deg,#000,#09374b 67%,#1b5f7c),
         linear-gradient(180deg,transparent,transparent);
     }
@@ -42,7 +42,7 @@
 </style>
 
 <header>
-    <h1><img id="oarc_logo" src="/OARC_Logo_without_BG.png" alt="Open AR Cloud header image"/></h1>
+    <h1><img id="oarc_logo" src="/OARC_Logo_without_BG.png" alt="Open AR Cloud header"/></h1>
 
     <nav>
         {#each links as [path, name]}

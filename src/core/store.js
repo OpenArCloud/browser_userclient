@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, readable } from 'svelte/store';
 
 
 // Location properties
@@ -21,3 +21,11 @@ export const selectedContentService = writable({
     id: null,
     isRunning: false
 })
+
+// Map defaults
+export const MIN_H3RESOLUTION = readable(0, () => () => {});
+export const DEFAULT_H3RESOLUTION = readable(7, () => () => {});
+export const MAX_H3RESOLUTION = readable(15, () => () => {});
+export const H3RESOLUTION_AUTO = readable(-1, () => () => {});
+export const DISPLAY_LATLON = readable('latlon', () => () => {});
+export const DISPLAY_H3 = readable('h3', () => () => {});

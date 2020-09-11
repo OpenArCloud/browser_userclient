@@ -48,6 +48,7 @@
             xrCompatible: true
         });
 
+        // eslint-disable-next-line no-undef
         session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
         session.requestReferenceSpace('local').then((refSpace) => {
             arRefSpace = refSpace;
@@ -58,12 +59,8 @@
     function onRequestSessionError(error) {
         console.error(error.message);
     }
-
-    function onEndSession(session) {
-        session.end();
-    }
-
-    function onSessionEnded(session) {
+    
+    function onSessionEnded() {
         arsession = null;
         isArsessionRunning = false;
 
@@ -73,7 +70,7 @@
     function onXRFrame(t, frame) {
         let session = frame.session;
         session.requestAnimationFrame(onXRFrame);
-        let pose = frame.getViewerPose(arRefSpace);
+        // let pose = frame.getViewerPose(arRefSpace);
     }
 </script>
 
