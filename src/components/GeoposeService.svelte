@@ -24,7 +24,7 @@
 <script>
     import { get } from 'svelte/store';
 
-    import { requestServices } from 'ssd-access';
+    import { getServicesAtLocation } from 'ssd-access';
     import { countryCode, h3Index, selectedGeoposeService } from '../core/store.js'
 
 
@@ -34,7 +34,7 @@
     function handleRequestGeoposeServices() {
         geoposeServices = [];
 
-        requestServices(get(countryCode), get(h3Index))
+        getServicesAtLocation(get(countryCode), get(h3Index))
             .then(data => {
                 data.forEach((item) => {
                     item.services.forEach((service)=> {

@@ -25,7 +25,7 @@
     import { get } from 'svelte/store';
 
     import { countryCode, h3Index, selectedContentService } from '../core/store';
-    import { requestServices } from 'ssd-access';
+    import { getServicesAtLocation } from 'ssd-access';
 
 
     let contentServices = [];
@@ -33,7 +33,7 @@
     function handleContentServices() {
         contentServices = [];
 
-        requestServices(get(countryCode), get(h3Index))
+        getServicesAtLocation(get(countryCode), get(h3Index))
             .then(data => {
                 data.forEach((item) => {
                     item.services.forEach((service)=> {

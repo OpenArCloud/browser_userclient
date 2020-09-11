@@ -16,6 +16,9 @@
     import { get } from 'svelte/store';
     import { lat, lon, countryCode, h3Index} from '../core/store.js';
 
+    import { goto } from '@sveltech/routify';
+
+
     function handleGetLocation() {
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -43,7 +46,7 @@
     }
 
     function handleSetLocation() {
-
+        $goto('map')
     }
 
     function handleGetH3index() {
