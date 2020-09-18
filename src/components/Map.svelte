@@ -184,9 +184,11 @@
                     content = `${latLon[0]}, ${latLon[1]}`;
                 }
 
+                const title = markerStyle.length > 0 ? `title="${content}"` : '';
+
                 let marker = L.marker(latLon, {
                     icon: L.divIcon({
-                        html: `<button style="${markerStyle}" class="h3indexmarker">${content}</button>`,
+                        html: `<button style="${markerStyle}" class="h3indexmarker" ${title}>${content}</button>`,
                         className: 'h3indexmarkercontainer'
                     }),
                     id: feature.id
