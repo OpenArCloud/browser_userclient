@@ -1,0 +1,28 @@
+{
+    "env": {
+        "es6": true,
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "eslint:recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+    },
+    "rules": {
+    },
+    "plugins": [
+        "svelte3"
+    ],
+    "overrides": [{
+            "files": ["*.svelte"],
+            "processor": "svelte3/svelte3"
+        }
+    ],
+    "ignorePatterns": [
+        "public/build/",
+        "rollup.config.js"
+    ]
+}
