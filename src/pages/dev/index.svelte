@@ -29,4 +29,4 @@
 <CurrentLocation />
 <GeoposeService />
 <ContentService />
-<ArDisplay/>
+<ArDisplay hasLoadUi=true />

@@ -3,6 +3,8 @@
   This code is licensed under MIT license (see LICENSE.md for details)
 -->
 
+<!-- routify:options bundle=true -->
+
 <script>
     import { isActive, url } from "@sveltech/routify";
 
