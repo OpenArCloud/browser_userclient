@@ -321,10 +321,8 @@
             <button on:click={handleStartClick}>{startButtonLabel}</button>
         {/if}
     </fieldset>
-<!--
-{:else if isArAvailable}
+{:else if displayUi === 'button' && isArAvailable}
     <button on:click={handleStartClick}>{startButtonLabel}</button>
--->
 {/if}
 
 

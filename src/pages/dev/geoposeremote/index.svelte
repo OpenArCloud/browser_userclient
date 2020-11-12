@@ -41,9 +41,10 @@
         if (isArAvailable) {
             if (remotePeerId) {
                 localPeer = new Peer(null, {  // TODO: Introduce .env parameters
-                    // debug: 2,
-                    host: 'https://9000-b3212983-a35b-4551-ac17-0c0f4fe2dc0f.ws-eu01.gitpod.io',        // localhost
-                    // port: 3001,
+                    debug: 2,
+                    host: 'rtc.oscp.cloudpose.io',
+                    port: 5678,
+                    key: 'peerjs-mvtest',
                     path: '/'
                 });
 
