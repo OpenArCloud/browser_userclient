@@ -160,6 +160,7 @@
 
                 const gltfScene = gltf.scene;
 
+                // TODO: That's completely wrong. Fix!
                 gltfScene.position.setFromMatrixPosition(reticle.matrix);
                 gltfScene.translateOnAxis(new THREE.Vector3(
                     Math.cos(distance), Math.sin(distance),
@@ -202,6 +203,7 @@
 
                 const [distance, ] = calcCoordOffset(mapPose[0], mapPose[1], refPose[0], refPose[1]);
 
+                // TODO: That's completely wrong. Fix!
                 mesh.position.setFromMatrixPosition(reticle.matrix);
                 mesh.translateOnAxis(new THREE.Vector3( Math.cos(distance), -(mapPose[2] - refPose[2]) / distance, Math.sin(distance)).normalize(), distance);
 
