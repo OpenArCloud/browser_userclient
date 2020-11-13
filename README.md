@@ -34,3 +34,6 @@ To run this app locally, you need to copy SSL certificates to the root folder
 of the project, named localhost.key and localhost.cert. The information on
 this site might be halpful to generate these keys: 
 https://matthewhoelter.com/2019/10/21/how-to-setup-https-on-your-local-development-environment-localhost-in-minutes.html
+
+The 3D model used for the demo is from Kokutochi Museum, downloaded from Google Poly:
+       https://poly.google.com/view/fowwHvCBUmB

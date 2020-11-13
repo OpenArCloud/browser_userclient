@@ -5,7 +5,7 @@
     "build": "rollup -c",
     "dev": "routify -c my-server",
     "my-server": "rollup -c -w",
-    "start": "sirv public --single  --http2 --key localhost.key --cert localhost.cert --host",
+    "start": "sirv public --single  --http2 --key localhost.key --cert localhost.cert",
     "lint": "eslint . --ext .js,.svelte --fix"
   },
   "devDependencies": {
@@ -17,11 +17,15 @@
     "eslint": "^7.11.0",
     "eslint-plugin-svelte3": "^2.7.3",
     "npm-run-all": "^4.1.5",
+    "peerjs": "^1.3.1",
     "rollup": "^2.32.0",
+    "rollup-plugin-cleaner": "^1.0.0",
     "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-svelte": "^6.0.2",
     "rollup-plugin-terser": "^7.0.2",
-    "svelte": "^3.29.0"
+    "svelte": "^3.29.0",
+    "svelte-zondicons": "^1.0.1",
+    "three": "^0.121.1"
   },
   "dependencies": {
     "geojson2h3": "^1.0.1",

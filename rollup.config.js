@@ -6,6 +6,8 @@ import json from '@rollup/plugin-json';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import replace from '@rollup/plugin-replace';
+import {routify} from '@sveltech/routify';
+import cleaner from 'rollup-plugin-cleaner';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -33,15 +35,13 @@ function serve() {
 export default {
 	input: 'src/main.js',
 	output: {
-		sourcemap: true,
-		format: 'iife',
+		sourcemap: !production,
+		format: 'esm',
 		name: 'app',
-		file: 'public/build/bundle.js'
+		dir: 'public/build/'
 	},
 	plugins: [
 		replace({
-			FOO: 'bar',
-
 			// 2 level deep object should be stringify
 			process: JSON.stringify({
 				env: {
@@ -49,14 +49,25 @@ export default {
 				}
 			})
 		}),
+
 		svelte({
 			// enable run-time checks when not in production
 			dev: !production,
 			// we'll extract any component CSS out into
 			// a separate file - better for performance
 			css: css => {
-				css.write('public/build/bundle.css');
+				css.write('bundle.css');
 			}
+		}),
+
+		//Dynamic import support
+		routify({ dynamicImports : true}),
+
+		//Clean the chunk files on changes
+		cleaner({
+			targets: [
+				'public/build/'
+			]
 		}),
 
 		// If you have external dependencies installed from
@@ -68,6 +79,7 @@ export default {
 			browser: true,
 			dedupe: ['svelte']
 		}),
+
 		commonjs(),
 		json(),
 
