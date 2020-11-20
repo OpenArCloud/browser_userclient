@@ -1,15 +1,29 @@
-import * as fs from 'fs';
+/*
+ * (c) 2020 Open AR Cloud
+ * This code is licensed under MIT license (see LICENSE.md for details)
+ */
+
 import svelte from 'rollup-plugin-svelte';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import copy from 'rollup-plugin-copy';
+import {config} from 'dotenv';
+import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 import {routify} from '@sveltech/routify';
 import cleaner from 'rollup-plugin-cleaner';
+import fs from "fs";
+// import analyze from 'rollup-plugin-analyzer';
+
+import path from 'path';
+
 
 const production = !process.env.ROLLUP_WATCH;
+const cesiumBuildPath = 'node_modules/cesium/Build/Cesium';
+
 
 function serve() {
 	let server;
@@ -42,10 +56,11 @@ export default {
 	},
 	plugins: [
 		replace({
-			// 2 level deep object should be stringify
-			process: JSON.stringify({
+			// stringify the object
+			oscp_app: JSON.stringify({
 				env: {
 					isProd: production,
+					...config().parsed // attached the .env config
 				}
 			})
 		}),
@@ -77,11 +92,29 @@ export default {
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
 			browser: true,
-			dedupe: ['svelte']
+			dedupe: ['svelte'],
+			preferBuiltins: false
+		}),
+
+		postcss({
+			extensions: [ '.css' ]
+		}),
+
+		copy({
+			targets: [
+				{ src: path.join(cesiumBuildPath, 'Assets'), dest: 'public/' },
+				{ src: path.join(cesiumBuildPath, 'ThirdParty'), dest: 'public/' },
+				{ src: path.join(cesiumBuildPath, 'Widgets'), dest: 'public/' },
+				{ src: path.join(cesiumBuildPath, 'Workers'), dest: 'public/' },
+			]
 		}),
 
 		commonjs(),
 		json(),
+
+		// analyze({
+		// 	summaryOnly: true
+		// }),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated

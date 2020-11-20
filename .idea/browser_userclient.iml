@@ -12,5 +12,7 @@
     <orderEntry type="library" name="leaflet" level="application" />
     <orderEntry type="library" name="three" level="application" />
     <orderEntry type="library" name="numjs" level="application" />
+    <orderEntry type="library" name="Cesium" level="application" />
+    <orderEntry type="library" name="widgets" level="application" />
   </component>
 </module>

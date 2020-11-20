@@ -1,5 +1,11 @@
 /node_modules/
+
 /public/build/
+/public/Assets/
+/public/ThirdParty/
+/public/Widgets/
+/public/Workers/
+
 /assets/
 
 .DS_Store
