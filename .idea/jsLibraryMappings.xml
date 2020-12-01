@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="JavaScriptLibraryMappings">
-    <file url="PROJECT" libraries="{Cesium, h3-js, leaflet, numjs, three, widgets}" />
+    <file url="PROJECT" libraries="{Cesium, exif-js, h3-js, leaflet, numjs, three, widgets}" />
   </component>
 </project>

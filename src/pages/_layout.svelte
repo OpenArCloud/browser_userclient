@@ -11,7 +11,7 @@
     const links =
             [
                 ['/index', 'Home'],
-                ['/user', 'User'],
+                ['/usr/', 'User'],
                 ['/dev/', 'Developer'],
             ]
 </script>

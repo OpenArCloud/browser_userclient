@@ -22,7 +22,8 @@
         }
     ],
     "ignorePatterns": [
-        "public/build/",
-        "rollup.config.js"
+        "public/",
+        "rollup.config.js",
+        "src/third-party/"
     ]
 }

@@ -57,7 +57,7 @@ export default {
 	plugins: [
 		replace({
 			// stringify the object
-			oscp_app: JSON.stringify({
+			oscp_client: JSON.stringify({
 				env: {
 					isProd: production,
 					...config().parsed // attached the .env config

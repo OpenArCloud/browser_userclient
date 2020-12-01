@@ -3,6 +3,12 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/assets" />
+      <excludeFolder url="file://$MODULE_DIR$/public/Assets" />
+      <excludeFolder url="file://$MODULE_DIR$/public/ThirdParty" />
+      <excludeFolder url="file://$MODULE_DIR$/public/Widgets" />
+      <excludeFolder url="file://$MODULE_DIR$/public/Workers" />
+      <excludeFolder url="file://$MODULE_DIR$/public/build" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
     </content>
@@ -14,5 +20,6 @@
     <orderEntry type="library" name="numjs" level="application" />
     <orderEntry type="library" name="Cesium" level="application" />
     <orderEntry type="library" name="widgets" level="application" />
+    <orderEntry type="library" name="exif-js" level="application" />
   </component>
 </module>
