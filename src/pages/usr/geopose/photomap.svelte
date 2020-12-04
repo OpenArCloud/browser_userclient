@@ -15,9 +15,11 @@
 
 
 <script>
-    import {onMount} from 'svelte';
+    import { onMount } from 'svelte';
 
-    import {geopose, imageDataBase64} from "./geoposestore.js";
+    import { goto } from '@sveltech/routify';
+
+    import { geopose, imageDataBase64 } from "./geoposestore.js";
 
     import * as Cesium from 'cesium';
     import "cesium/Build/Cesium/Widgets/widgets.css";
@@ -38,35 +40,50 @@
 
         if ($geopose.pose !== undefined) {
             const positions = [Cesium.Cartographic.fromDegrees($geopose.pose.longitude, $geopose.pose.latitude)];
-            Cesium.sampleTerrain(terrainProvider, 11, positions)
+            Cesium.sampleTerrainMostDetailed(terrainProvider, positions)
                 .then(updatedPositions => {
                     const photoElement = document.createElement('img');
                     photoElement.src = $imageDataBase64;
 
-                    const headingpitchroll = Cesium.HeadingPitchRoll.fromQuaternion(new Cesium.Quaternion(
-                        $geopose.pose.quaternion[0], $geopose.pose.quaternion[1], $geopose.pose.quaternion[2], $geopose.pose.quaternion[3]))
+
+                    console.log(updatedPositions);
+                    console.log($geopose.pose);
+
+
+                    const first = Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(0,1,0), -Math.PI/2);
+                    const second = Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(1,0,0), -Math.PI/2);
+                    const acQuat = new Cesium.Quaternion($geopose.pose.quaternion[0], $geopose.pose.quaternion[1], $geopose.pose.quaternion[2], $geopose.pose.quaternion[3]);
+                    let newQuat = Cesium.Quaternion.multiply(acQuat, first, new Cesium.Quaternion());
+                    newQuat = Cesium.Quaternion.multiply(newQuat, second, new Cesium.Quaternion());
+
+                        // newOri = orientation * Quaternion.fromAxisAngle({0,1,0}, -pi/2) * Quaternion.fromAxisAngle({1,0,0}, -pi/2)
+
+
+
+
+                    const headingpitchroll = Cesium.HeadingPitchRoll.fromQuaternion(newQuat)
 
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
-                    viewer.camera.flyTo({
+                    viewer.camera.setView({
                         destination: Cesium.Cartesian3.fromDegrees(
-                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + $geopose.pose.altitude * 10),
+                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10),
                         orientation: {
                             heading: headingpitchroll.heading,
                             pitch: headingpitchroll.pitch,
-                            roll: headingpitchroll.roll
                         },
                         complete: () => {
                             viewer.scene.camera.moveBackward(3);
                         }
                     });
 
+                    const normal = Cesium.Quaternion.multiply(newQuat, new Cesium.Quaternion(0,1,0,0), new Cesium.Quaternion());
+
                     viewer.entities.add({
                         position: Cesium.Cartesian3.fromDegrees(
-                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + $geopose.pose.altitude * 10),
+                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10),
                         plane: {
-                            plane: new Cesium.Plane(Cesium.Cartesian3.normalize(
-                                new Cesium.Cartesian3($geopose.pose.quaternion[0], $geopose.pose.quaternion[1] + Math.PI, $geopose.pose.quaternion[2]),
-                                new Cesium.Cartesian3()), 0.0),
+                            plane: new Cesium.Plane(
+                                Cesium.Quaternion.computeAxis(normal, new Cesium.Cartesian3()), 0.0),
                             dimensions: new Cesium.Cartesian2(1.77, 1),
                             material: new Cesium.ImageMaterialProperty({
                                 image: photoElement
@@ -75,37 +92,11 @@
                             outlineColor: Cesium.Color.BLACK,
                         },
                     });
-                })
+                });
         } else {
-            alert("Can open this page only from another page providing a GeoPose")
+            $goto('../localizephoto');
         }
     })
-
-    function q2e(q1) {
-        let heading, attitude, bank;
-
-        const test = q1.x * q1.y + q1.z * q1.w;
-        if (test > 0.499) { // singularity at north pole
-            heading = 2 * Math.atan2(q1.x, q1.w);
-            attitude = Math.PI / 2;
-            bank = 0;
-            return;
-        }
-        if (test < -0.499) { // singularity at south pole
-            heading = -2 * Math.atan2(q1.x, q1.w);
-            attitude = -Math.PI / 2;
-            bank = 0;
-            return;
-        }
-        const sqx = q1.x * q1.x;
-        const sqy = q1.y * q1.y;
-        const sqz = q1.z * q1.z;
-        heading = Math.atan2(2 * q1.y * q1.w - 2 * q1.x * q1.z, 1 - 2 * sqy - 2 * sqz);
-        attitude = Math.asin(2 * test);
-        bank = Math.atan2(2 * q1.x * q1.w - 2 * q1.y * q1.z, 1 - 2 * sqx - 2 * sqz)
-
-        return [heading, attitude, bank]
-    }
 </script>
 
 <div id="cesiumContainer"></div>

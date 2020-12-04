@@ -5,11 +5,32 @@
 
 <style>
     #preview {
-        width: 90vw;
+        width: 75vw;
     }
 
     .title {
         font-weight: bold;
+    }
+
+    .selectbutton {
+        position: relative;
+        margin: auto;
+        padding: 1.5rem 5rem;
+    }
+
+    .selectbutton img {
+        position: absolute;
+        top: 0px;
+        left: 5.5rem;
+        width: 70px;
+    }
+
+    .centered {
+        height: 4rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 2rem;
     }
 
     .hidden {
@@ -33,9 +54,11 @@
 
     let preview;
     let isPhotoLoaded = false;
+    let photoHasLocation = false;
     let filename;
     let latAngle, lonAngle;
     let photoLocationMessage = '';
+    let accessingGeoPoseServer = false;
 
     let isGeoposeLoaded = false;
     let geoposeLocationMessage = '';
@@ -69,11 +92,12 @@
         reader.readAsDataURL(file);
     }
 
-    function photoLoaded() {
+    function photoLoaded(event) {
         isPhotoLoaded = true;
 
+        // TODO: BUG - Use different EXIF reader, because this one caches the data internally
         /* eslint-disable no-undef */
-        EXIF.getData(preview, function() {
+        EXIF.getData(event.target, () => {
             const lat = EXIF.getTag(this, "GPSLatitude");
             const latRef = EXIF.getTag(this, "GPSLatitudeRef") === 'S' ? -1 : 1;
             const lon = EXIF.getTag(this, "GPSLongitude");
@@ -83,12 +107,9 @@
                 latAngle = Number((lat[0]) + Number(lat[1]) / 60 + Number(lat[2]) / (60 * 60)) * latRef;
                 lonAngle = Number((lon[0]) + Number(lon[1]) / 60 + Number(lon[2]) / (60 * 60)) * lonRef;
 
-                photoLocationMessage = `${round(latAngle, 3)}, ${round(lonAngle, 3)}`;
-            } else if (filename === 'seattle.jpg') {
-                // The demo image available to me has no location in EXIF data, unfortunately. Faking it here.
-                latAngle = 47.611550;
-                lonAngle = -122.337056;
+                setCountryCode();
 
+                photoHasLocation = true;
                 photoLocationMessage = `${round(latAngle, 3)}, ${round(lonAngle, 3)}`;
             } else {
                 latAngle = undefined;
@@ -100,10 +121,19 @@
     }
 
     function localizePhoto() {
+        accessingGeoPoseServer = true;
+
         const h3Index = h3.geoToH3(latAngle, lonAngle, 8);
 
         getServicesAtLocation(selectedCountry.text, h3Index)
-            .then(data => data[0].services[0].url)
+            .then(data => {
+                if (data.length !== 0) {
+                    return data[0].services[0].url;
+                } else {
+                    // no ssd available in the requested country. Checking with Augmented City as a fallback for now
+                    return 'http://developer.augmented.city';
+                }
+            })
             .then(serviceUrl => {
                 if (!serviceUrl.includes('https://')) {
                     serviceUrl = serviceUrl.replace('http://', 'https://');
@@ -153,6 +183,8 @@
                     body: JSON.stringify(requestBody)
                 })
                     .then(response => {
+                        accessingGeoPoseServer = false;
+
                         if (!response.ok) {
                             throw new Error('Network response was not ok');
                         }
@@ -172,43 +204,106 @@
                     });
             })
     }
+
+    function setCountryCode() {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latAngle}&lon=${lonAngle}&format=json&zoom=1&email=info%40michaelvogt.eu`)
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error(response.text());
+                }
+            })
+            .then((data) => {
+                const countryCode = data.address.country_code.toUpperCase();
+                const filtered = countries.filter((country) => country.text === countryCode);
+
+                if (filtered.length !== 0) {
+                    selectedCountry = filtered[0];
+                } else {
+                    selectedCountry = countries[1];
+                }
+            })
+            .catch((error) => {
+                throw new Error(error.statusText());
+            })
+
+    }
 </script>
 
 
 <div>
-    <p>Introduction of the demo TBD</p>
+    <h3>Photo positioning</h3>
+    <p>
+        Given a photo with rough coordinates where it was shot, it is possible to position it in 3D
+        at the exact position and rotation it was shot.
+    </p>
+
+    <dl>
+        <dt>The process to determine the required information is like this:</dt>
+        <dd>Request the available services from the regional Spatial Services Discovery</dd>
+        <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
+        <dd>Add the photo to Cesium at the received location and rotation</dd>
+    </dl>
+
+    <p>
+        This means that this can be done in every region with any photo where the rough location it was shot at is known
+        and any GeoPose service provider is available. For this demo, we use the location embedded in the EXIF metadata.
+        But it can be provided from other sources, too.
+    </p>
+
+    <p>
+        The capability to position visual content like this in a 3D environment Cesium provides, has lots of interesting
+        applications, especially when taking the terrain away and using it in an AR environment.
+    </p>
 
     <div>
         <p class="title">Location from photo:</p>
-        {#if isPhotoLoaded === false}
+        {#if photoHasLocation === false}
+            <p>{photoLocationMessage}</p>
             <Import buttonLabel="Select photo" postFileFunction="{loadPhoto}"/>
         {:else}
             <p>{photoLocationMessage}</p>
         {/if}
 
-        {#if isPhotoLoaded === true && isGeoposeLoaded === false}
+        {#if photoHasLocation === true && isGeoposeLoaded === false}
             <p class="title">GeoPose from photo:</p>
-            <button
-                    disabled="{latAngle === undefined || lonAngle === undefined}"
-                    on:click={localizePhoto}>
-                Localize photo
-            </button>
-            <span>in</span>
-            <select bind:value={selectedCountry}>
-                {#each countries as country}
-                    <option value={country}>{country.text}</option>
-                {/each}
-            </select>
+            <div class="centered">
+
+                {@debug latAngle, lonAngle, accessingGeoPoseServer}
+
+                <button class="selectbutton"
+                        disabled="{latAngle === undefined || lonAngle === undefined || accessingGeoPoseServer === true}"
+                        on:click={localizePhoto}>
+                    Localize photo
+                    {#if accessingGeoPoseServer === true}
+                        <img src="/spinner.svg" />
+                    {/if}
+                </button>
+<!--
+                <span>in</span>
+                <select bind:value={selectedCountry}>
+                    {#each countries as country}
+                        <option value={country}>{country.text}</option>
+                    {/each}
+                </select>
+-->
+            </div>
         {:else if isGeoposeLoaded === true}
             <p class="title">GeoPose from photo:</p>
             <p>{geoposeLocationMessage}</p>
         {/if}
 
         {#if isGeoposeLoaded === true}
-            <button on:click={$goto('../photomap')}>Show location on 3D Map</button>
+            <div class="centered">
+                <button class="selectbutton" on:click={$goto('../photomap')}>Place on 3D Map</button>
+            </div>
         {/if}
 
-        <img id="preview" class:hidden={isPhotoLoaded === false} bind:this={preview} on:load={photoLoaded} alt="Preview of the selected file" />
+        <div class="centered">
+            <img id="preview" class:hidden={isPhotoLoaded === false}
+                bind:this={preview} on:load={photoLoaded} alt="Preview of the selected photo" />
+        </div>
     </div>
 </div>
 

@@ -18,6 +18,10 @@ a {
 	text-decoration: none;
 }
 
+h2 {
+	color: #ea6237;
+}
+
 input, button, select, textarea {
 	font-family: inherit;
 	font-size: inherit;
@@ -49,6 +53,6 @@ button:focus {
 	border-color: #666;
 }
 
-h2 {
-	color: #ea6237;
+.hidden {
+	display: none;
 }

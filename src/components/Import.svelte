@@ -5,7 +5,7 @@
 
 <style>
     #dropzone {
-        height: 5rem;
+        height: 4rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -18,9 +18,8 @@
     }
 
     #dropzone button {
-        max-width: 15rem;
         margin: auto;
-        padding: 2rem;
+        padding: 1.5rem 5rem;
     }
 
     input[type=file] {
