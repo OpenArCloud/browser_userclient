@@ -89,4 +89,5 @@
         <label for="fileinput">{buttonLabel}</label>
         <input id="fileinput" type="file" disabled={!dropEnabled} accept={accepts} on:change={handleFileInput}/>
     </button>
+    <slot name="alternative" />
 </div>

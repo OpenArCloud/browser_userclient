@@ -8,6 +8,10 @@
         width: 75vw;
     }
 
+    #defaultbutton {
+        margin-top: 10px;
+    }
+
     .title {
         font-weight: bold;
     }
@@ -110,7 +114,7 @@
                 setCountryCode();
 
                 photoHasLocation = true;
-                photoLocationMessage = `${round(latAngle, 3)}, ${round(lonAngle, 3)}`;
+                photoLocationMessage = `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}`;
             } else {
                 latAngle = undefined;
                 lonAngle = undefined;
@@ -196,7 +200,7 @@
                         geopose.set(data);
 
                         geoposeLocationMessage =
-                            `${round(latAngle, 3)}, ${round(lonAngle, 3)}, ${$geopose.pose.quaternion.toLocaleString()}`;
+                            `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}, Quaternion: ${$geopose.pose.quaternion.toLocaleString()}`;
                     })
                     .catch(error => {
                         console.error(error);
@@ -225,9 +229,19 @@
                 }
             })
             .catch((error) => {
-                throw new Error(error.statusText());
+                throw new Error(error);
             })
 
+    }
+
+    function getDefaultImage() {
+        fetch('/photos/seattle_gps.jpg')
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
+                preview.src = $imageDataBase64;
+                filename = 'seattle.jpg';
+            })
     }
 </script>
 
@@ -261,7 +275,9 @@
         <p class="title">Location from photo:</p>
         {#if photoHasLocation === false}
             <p>{photoLocationMessage}</p>
-            <Import buttonLabel="Select photo" postFileFunction="{loadPhoto}"/>
+            <Import accepts="image/jpeg" buttonLabel="Select photo" postFileFunction="{loadPhoto}">
+                <button id="defaultbutton" class="selectbutton" slot="alternative" on:click={getDefaultImage} >Take Default</button>
+            </Import>
         {:else}
             <p>{photoLocationMessage}</p>
         {/if}

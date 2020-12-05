@@ -32,11 +32,12 @@
 
 
     onMount(() => {
-        viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain()
-        });
-
         const terrainProvider = Cesium.createWorldTerrain();
+
+        viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: terrainProvider,
+            showRenderLoopErrors: true,
+        });
 
         if ($geopose.pose !== undefined) {
             const positions = [Cesium.Cartographic.fromDegrees($geopose.pose.longitude, $geopose.pose.latitude)];
@@ -47,43 +48,34 @@
 
 
                     console.log(updatedPositions);
-                    console.log($geopose.pose);
+                    console.log($geopose);
 
-
-                    const first = Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(0,1,0), -Math.PI/2);
-                    const second = Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(1,0,0), -Math.PI/2);
                     const acQuat = new Cesium.Quaternion($geopose.pose.quaternion[0], $geopose.pose.quaternion[1], $geopose.pose.quaternion[2], $geopose.pose.quaternion[3]);
-                    let newQuat = Cesium.Quaternion.multiply(acQuat, first, new Cesium.Quaternion());
-                    newQuat = Cesium.Quaternion.multiply(newQuat, second, new Cesium.Quaternion());
 
-                        // newOri = orientation * Quaternion.fromAxisAngle({0,1,0}, -pi/2) * Quaternion.fromAxisAngle({1,0,0}, -pi/2)
-
-
-
-
-                    const headingpitchroll = Cesium.HeadingPitchRoll.fromQuaternion(newQuat)
 
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
-                    viewer.camera.setView({
-                        destination: Cesium.Cartesian3.fromDegrees(
-                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10),
+
+                    const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(acQuat);
+                    const position = Cesium.Cartesian3.fromDegrees(
+                        $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10);
+
+                    viewer.camera.flyTo({
+                        destination: position,
                         orientation: {
-                            heading: headingpitchroll.heading,
-                            pitch: headingpitchroll.pitch,
+                            heading: headingPitchRoll.heading,
+                            pitch: headingPitchRoll.pitch,
                         },
                         complete: () => {
                             viewer.scene.camera.moveBackward(3);
                         }
                     });
 
-                    const normal = Cesium.Quaternion.multiply(newQuat, new Cesium.Quaternion(0,1,0,0), new Cesium.Quaternion());
+                    const normal =  Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
 
                     viewer.entities.add({
-                        position: Cesium.Cartesian3.fromDegrees(
-                            $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10),
+                        position: position,
                         plane: {
-                            plane: new Cesium.Plane(
-                                Cesium.Quaternion.computeAxis(normal, new Cesium.Cartesian3()), 0.0),
+                            plane: new Cesium.Plane(normal, 0.0),
                             dimensions: new Cesium.Cartesian2(1.77, 1),
                             material: new Cesium.ImageMaterialProperty({
                                 image: photoElement

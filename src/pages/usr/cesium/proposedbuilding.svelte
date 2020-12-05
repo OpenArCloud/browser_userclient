@@ -5,7 +5,7 @@
 
 <style>
     video {
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
@@ -33,15 +33,20 @@
         background-color: rgba(138, 136, 136, 0.5);
     }
 
-    #arcontainer, #cesiumcontainer {
+    #arcontainer, #cesiumcontainer, #cover {
         position: absolute;
         top: 0;
+        left: 0;
         width: 100vw;
         height: 100vh;
     }
 
     #arcontainer {
         z-index: 10;
+    }
+
+    #cover {
+        background-color: #000;
     }
 </style>
 
@@ -51,12 +56,13 @@
 
     import { Scene } from '../../../third-party/render/scenes/scene.js';
     import { createWebGLContext, Renderer } from '../../../third-party/render/core/renderer.js';
+    import { getServicesAtLocation } from "ssd-access";
     import { Gltf2Node } from '../../../third-party/render/nodes/gltf2.js';
 
     import * as Cesium from 'cesium';
     import "cesium/Build/Cesium/Widgets/widgets.css";
+
     import * as h3 from "h3-js";
-    import {getServicesAtLocation} from "ssd-access";
     import {v4 as uuidv4} from "uuid";
 
 
@@ -74,7 +80,7 @@
 
     let gl = null;
     let arsession, arRefSpace, arViewerSpace, arHitTestSource = null;
-    let arZeroPosition;
+    let arZeroPosition = null;
 
     let renderer = null;
     let scene, reticle;
@@ -83,11 +89,15 @@
     let doGeotagArZero = false;
     let pose = null;
 
+    let skipLocalisation = false;
+    let serverErrorMessage = '';
+
+    let heightCorrection = 0;
+    let initialGeoCode;
+
 
     const videoWidth = screen.height  * window.devicePixelRatio;
     const videoHeight = screen.width  * window.devicePixelRatio;
-
-    const initialGeoCode = {lat: 8.550262, lon: 48.750253, height: 490};
 
 
     onMount(() => {
@@ -99,7 +109,10 @@
         }
 
         document.addEventListener("fullscreenchange", () => {
-            showVideo = !!document.fullscreenElement;
+            if (document.fullscreenElement === false) {
+                showVideo = false;
+                showAr = false;
+            }
         });
 
         if (navigator.xr) {
@@ -114,20 +127,33 @@
     })
 
     function startVideo() {
-        navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: {
-                width: videoWidth,
-                height: videoHeight,
-                facingMode: {
-                    exact: 'environment'
+        if (skipLocalisation === true) {
+            showVideo = false;
+
+            // Bad Wildbad
+            initialGeoCode = {lat: 48.750196, lon: 8.550324, height: 490};
+
+            startArSession();
+            initCesium();
+
+            doGeotagArZero = true;
+        } else {
+            navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    width: videoWidth,
+                    height: videoHeight,
+                    facingMode: {
+                        exact: 'environment'
+                    }
                 }
-            }
-        })
-            .then((stream) => {
-                camera.srcObject = stream;
-                document.documentElement.requestFullscreen();
-            });
+            })
+                .then((stream) => {
+                    camera.srcObject = stream;
+                    showVideo = true;
+                    document.documentElement.requestFullscreen();
+                });
+        }
     }
 
     function capturePhoto() {
@@ -136,16 +162,13 @@
         photoCanvas.getContext("2d").drawImage(camera, 0, 0);
 
         camera.pause();
-
-        const dataUrl = photoCanvas.toDataURL('image/jpg');
-        getPhotoPose(dataUrl);
-
-        // showAr = true;
-        // startArSession();
+        getPhotoPose(photoCanvas.toDataURL('image/jpeg').split(',')[1]);
     }
 
     function startArSession() {
         if (!arsession) {
+            showAr = true;
+
             scene = new Scene();
             scene.enableStats(false);
             scene.clear = false;
@@ -171,7 +194,6 @@
         isArsessionRunning = true;
 
         session.addEventListener('end', onSessionEnded);
-        session.addEventListener('select', onSelect);
 
         if (!gl) {
             gl = createWebGLContext({
@@ -198,22 +220,15 @@
         });
     }
 
-    function onSelect() {
-        if (viewer === null) {
-            // initCesium();
-            // doGeotagArZero = true;
-        }
-    }
-
     function initCesium() {
         // eslint-disable-next-line no-undef
         Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjMwMzYwNi1lNTJiLTQwOWItODc0NS0wOGVhMWJjMjBhNWQiLCJpZCI6MjQyNjIsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODQ5MTY5MjB9.5yH_PV4X2a_yfqoRqXGwAXcIBFN7G0Rg70lbh97Hi-Y";
         window.CESIUM_BASE_URL = '/';
 
-        console.log(Cesium.Ion.defaultAccessToken);
-
         viewer = new Cesium.Viewer('cesiumcontainer', {
+
             useDefaultRenderLoop: false,
+            showRenderLoopErrors: true,
             selectionIndicator: false,
             homeButton: false,
             sceneModePicker: false,
@@ -245,13 +260,21 @@
             terrainShadows: Cesium.ShadowMode.DISABLED,
             skyBox: false,
             skyAtmosphere: false,
-            globe: false
+            globe: false,
+            // terrainProvider: Cesium.createWorldTerrain()
         });
+
+        // viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
         viewer.scene.backgroundColor = Cesium.Color.TRANSPARENT;
 
         viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
                 url: Cesium.IonResource.fromAssetId(185752)
+            })
+        );
+
+        viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+                url: Cesium.IonResource.fromAssetId(210363)
             })
         );
 
@@ -305,17 +328,32 @@
 
 
         // Cesium
-        if (doGeotagArZero === true) {
+        if (doGeotagArZero === true && pose !== null) {
             doGeotagArZero = false;
 
-            arZeroPosition = Cesium.Cartesian3.subtract(
-                Cesium.Cartesian3.fromDegrees(initialGeoCode.lat, initialGeoCode.lon, initialGeoCode.height),
-                new Cesium.Cartesian3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z),
-                new Cesium.Cartesian3()
-            );
+            const positions = [Cesium.Cartographic.fromDegrees(initialGeoCode.lon, initialGeoCode.lat)];
+            const terrainProvider = Cesium.createWorldTerrain();
+
+            Cesium.sampleTerrainMostDetailed(terrainProvider, positions)
+                .then((updatedPositions) => {
+
+
+                    console.log(updatedPositions);
+
+
+                    if (skipLocalisation === true) {
+                        arZeroPosition = Cesium.Cartesian3.fromDegrees(initialGeoCode.lon, initialGeoCode.lat, updatedPositions[0].height + heightCorrection);
+                    } else {
+                        arZeroPosition = Cesium.Cartesian3.subtract(
+                            Cesium.Cartesian3.fromDegrees(initialGeoCode.lon, initialGeoCode.lat, initialGeoCode.height + heightCorrection),
+                            new Cesium.Cartesian3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z),
+                            new Cesium.Cartesian3()
+                        );
+                    }
+                });
         }
 
-        if (viewer !== null && pose !== null) {
+        if (viewer !== null && arZeroPosition != null && pose !== null) {
             const position = Cesium.Cartesian3.add(
                 arZeroPosition,
                 new Cesium.Cartesian3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z),
@@ -323,15 +361,22 @@
             );
             const headingPitchRoll = q2e(pose.transform.orientation);
 
+/*
+            console.log(Cesium.Cartographic.fromCartesian(position).latitude * 180 / Math.PI,
+                Cesium.Cartographic.fromCartesian(position).longitude * 180 / Math.PI, headingPitchRoll);
+*/
+
+            // TODO: Request correct camera height from Cesium
             viewer.scene.camera.setView({
                 destination: position,
                 orientation: {
-                    heading: -headingPitchRoll[0],
+                    heading: -headingPitchRoll[0] + Math.PI / 2,
                     pitch: headingPitchRoll[2],
                     roll: -headingPitchRoll[1]
                 }
             });
 
+            viewer.resize();
             viewer.render();
         }
     }
@@ -364,10 +409,18 @@
     }
 
     function getPhotoPose(photoUrl) {
-        const [latAngle, lonAngle] = getCurrentLocation();
-        const h3Index = h3.geoToH3(latAngle, lonAngle, 8);
+        let h3Index;
+        let latAngle;
+        let lonAngle;
 
-        getCountryCode(latAngle, lonAngle)
+        getCurrentLocation()
+            .then(position => {
+                latAngle = position[0];
+                lonAngle = position[1];
+
+                h3Index = h3.geoToH3(latAngle, lonAngle, 8);
+                return getCountryCode(latAngle, lonAngle);
+            })
             .then((countryCode) => getServicesAtLocation(countryCode, h3Index))
             .then(data => 'http://developer.augmented.city')      // data[0].services[0].url
             .then(serviceUrl => {
@@ -377,7 +430,7 @@
 
                 const requestBody = {
                     "id": uuidv4(),
-                    "timestamp": Date.now().toLocaleString(),
+                    "timestamp": Date.now().toString(),
                     "type": "geopose",
                     "sensors": [{
                         "id": "0",
@@ -387,7 +440,7 @@
                         "type": "geolocation"
                     }],
                     "sensorReadings": [{
-                        "timestamp": Date.now().toLocaleString(),
+                        "timestamp": Date.now().toString(),
                         "sensorId": "0",
                         "reading": {
                             "sequenceNumber": 0,
@@ -396,11 +449,11 @@
                                 "mirrored": false,
                                 "rotation": 0
                             },
-                            "imageBytes": photoUrl.split(',')[1]
+                            "imageBytes": photoUrl
                         }
                     },
                         {
-                            "timestamp": Date.now().toLocaleString(),
+                            "timestamp": Date.now().toString(),
                             "sensorId": "1",
                             "reading": {
                                 "latitude": latAngle,
@@ -428,14 +481,19 @@
                     .then(data => {
                         console.log(data);
 
-                        startArSession();
+                        showVideo = false;
 
+                        initialGeoCode = {lat: 48.750196, lon: 8.550324, height: 490};
+
+                        startArSession();
                         initCesium();
+
                         doGeotagArZero = true;
                     })
                     .catch(error => {
                         console.error(error);
-                        // geoposeLocationMessage = "No GeoPose found. Maybe the map isn't public";
+                        serverErrorMessage = error.toLocaleString();
+                        showVideo = false;
                     });
             })
     }
@@ -444,17 +502,21 @@
         // Heidelberg Castle
         let thisLoc = [49.410625, 8.715277];
 
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                thisLoc = [position.coords.latitude, position.coords.longitude];
-            }, (error) => {
-                console.log(`Location request failed: ${error}`)
-                throw new Error(error);
-            }, {
-                enableHighAccuracy: false
-            });
-        }
-        return thisLoc;
+        return new Promise((resolve, reject) => {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    resolve([position.coords.latitude, position.coords.longitude]);
+                }, (error) => {
+                    console.log(`Location request failed: ${error}`)
+                    reject(error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0
+                });
+            } else {
+                resolve(thisLoc);
+            }
+        });
     }
 
     function getCountryCode(latAngle, lonAngle) {
@@ -478,12 +540,10 @@
 
 
 <div>
-    <p>Introduction of the demo TBD</p>
-
-    <button disabled={canAccessCamera === false || arAvailableMessage !== available ? 'disabled' : ''} on:click={startVideo} >Start</button>
-    <span>{cameraStatusMessage}</span><span>{arAvailableMessage}</span>
+    <div id="cover" class:hidden={!showVideo && !showAr}></div>
 
     <video class:hidden={!showVideo} autoplay bind:this={camera}></video>
+
     <div id="capturewrapper" class:hidden={showVideo === false || showAr === true} bind:this={captureWrapper}>
         <button id="capture" on:click={capturePhoto}></button>
     </div>
@@ -491,6 +551,31 @@
     <div id="arcontainer" class:hidden={!showAr} bind:this={arContainer}>
         <div id="cesiumcontainer"></div>
     </div>
+
+    <h3>Proposed building in AR</h3>
+    <p>
+        Inspired by the proposed building tutorial from the Cesium website, this experiment recreates it in AR space.
+        Replacing the virtual terrain and buildings with the real world environment, the effect of the proposed
+        building to the surrounding can be seen very clearly.
+    </p>
+    <dl>
+        <dt>The process to determine the current location and orientation of the device is like this:</dt>
+        <dd>Take a photo with the device camera</dd>
+        <dd>Request the available services from the regional Spatial Services Discovery</dd>
+        <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
+        <dd>Forward the poses received from WebXR to Cesium</dd>
+    </dl>
+    <p>
+        As the current location is determined by a photo from the current location, and available services are
+        requested from the Spatial Services Discovery, this experiment can be used everywhere a GeoPose service is
+        available.
+    </p>
+
+    <button disabled={canAccessCamera === false || arAvailableMessage !== available ? 'disabled' : ''} on:click={startVideo} >Start</button>
+<!--    <input type="checkbox" bind:checked={skipLocalisation} />-->
+
+<!--    <div>{cameraStatusMessage}</div><div>{arAvailableMessage}</div><div>{serverErrorMessage}</div>-->
+<!--    <div><input bind:value={heightCorrection} /></div>-->
 
     <canvas bind:this={photoCanvas}></canvas>
 </div>
