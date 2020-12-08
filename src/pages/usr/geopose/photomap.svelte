@@ -46,38 +46,20 @@
                     const photoElement = document.createElement('img');
                     photoElement.src = $imageDataBase64;
 
-
-                    console.log(updatedPositions);
-                    console.log($geopose);
-
-
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
                     const position = new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z);
                     const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0], $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
 
                     const local2fixed = Cesium.Transforms.northWestUpToFixedFrame(position);
-                    const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed, new Cesium.Cartesian3(0, 0, 18), {});
-
-                    console.log(local2fixed);
-
+                    const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed, new Cesium.Cartesian3(0, 0, updatedPositions[0].height + $geopose.pose.altitude * 10), {});
 
                     let mat3 = Cesium.Matrix4.getMatrix3(local2fixed, {});
-
-
-                    console.log(mat3);
-
 
                     let fixed2local = Cesium.Quaternion.fromRotationMatrix(Cesium.Matrix3.inverse(mat3, {}));
 
                     let local_ori = Cesium.Quaternion.multiply(fixed2local, orientation, {});
                     const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(local_ori);
-
-
-                    console.log(headingPitchRoll.heading)
-                    console.log(headingPitchRoll.pitch);
-                    console.log(headingPitchRoll.roll);
-
 
                     viewer.camera.flyTo({
                         destination: higher_position,
@@ -90,7 +72,7 @@
                         }
                     });
 
-                    const normal =  Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
+                    const normal =  Cesium.Cartesian3.clone(new Cesium.Cartesian3(-1.0, 0.0, 0.0));
 
                     viewer.entities.add({
                         position: higher_position,

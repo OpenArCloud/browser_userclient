@@ -243,19 +243,6 @@
                 filename = 'seattle.jpg';
             })
     }
-
-    function getMirroredImage() {
-        return fetch('/photos/seattle_gps_mirror.jpg')
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-                imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
-            })
-    }
-
-    function openMap() {
-        getMirroredImage()
-            .then(() => $goto('../photomap'));
-    }
 </script>
 
 
@@ -297,10 +284,8 @@
 
         {#if photoHasLocation === true && isGeoposeLoaded === false}
             <p class="title">GeoPose from photo:</p>
+            <p>{geoposeLocationMessage}</p>
             <div class="centered">
-
-                {@debug latAngle, lonAngle, accessingGeoPoseServer}
-
                 <button class="selectbutton"
                         disabled="{latAngle === undefined || lonAngle === undefined || accessingGeoPoseServer === true}"
                         on:click={localizePhoto}>
@@ -309,14 +294,6 @@
                         <img src="/spinner.svg" />
                     {/if}
                 </button>
-<!--
-                <span>in</span>
-                <select bind:value={selectedCountry}>
-                    {#each countries as country}
-                        <option value={country}>{country.text}</option>
-                    {/each}
-                </select>
--->
             </div>
         {:else if isGeoposeLoaded === true}
             <p class="title">GeoPose from photo:</p>
@@ -325,7 +302,7 @@
 
         {#if isGeoposeLoaded === true}
             <div class="centered">
-                <button class="selectbutton" on:click={openMap}>Place on 3D Map</button>
+                <button class="selectbutton" on:click={$goto('../photomap')}>Place on 3D Map</button>
             </div>
         {/if}
 

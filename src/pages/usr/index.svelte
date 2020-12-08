@@ -26,7 +26,7 @@
     <h3 class="subjectheader">GeoPose</h3>
     <dl on:click={$goto('../geopose/localizephoto')}>
         <dt>Determine GeoPose of a photo</dt>
-        <dd><img src="/content/building-proposal.jpg" alt="Icon for GeoPose localisation experiment"/></dd>
+        <dd><img src="/content/photoposition.jpg" alt="Icon for GeoPose localisation experiment"/></dd>
         <dd>Some info about it</dd>
     </dl>
 
