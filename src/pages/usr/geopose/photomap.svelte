@@ -25,7 +25,7 @@
     import "cesium/Build/Cesium/Widgets/widgets.css";
 
     window.CESIUM_BASE_URL = '/';
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjMwMzYwNi1lNTJiLTQwOWItODc0NS0wOGVhMWJjMjBhNWQiLCJpZCI6MjQyNjIsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODQ5MTY5MjB9.5yH_PV4X2a_yfqoRqXGwAXcIBFN7G0Rg70lbh97Hi-Y';
+    Cesium.Ion.defaultAccessToken = '';
 
 
     let viewer;
@@ -39,8 +39,8 @@
             showRenderLoopErrors: true,
         });
 
-        if ($geopose.pose !== undefined) {
-            const positions = [Cesium.Cartographic.fromDegrees($geopose.pose.longitude, $geopose.pose.latitude)];
+        if ($geopose.ecef !== undefined) {
+            const positions = [Cesium.Cartographic.fromCartesian(new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z))];
             Cesium.sampleTerrainMostDetailed(terrainProvider, positions)
                 .then(updatedPositions => {
                     const photoElement = document.createElement('img');
@@ -50,17 +50,37 @@
                     console.log(updatedPositions);
                     console.log($geopose);
 
-                    const acQuat = new Cesium.Quaternion($geopose.pose.quaternion[0], $geopose.pose.quaternion[1], $geopose.pose.quaternion[2], $geopose.pose.quaternion[3]);
-
 
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-                    const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(acQuat);
-                    const position = Cesium.Cartesian3.fromDegrees(
-                        $geopose.pose.longitude, $geopose.pose.latitude, updatedPositions[0].height + 1.5 + Math.abs($geopose.pose.altitude) * 10);
+                    const position = new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z);
+                    const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0], $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
+
+                    const local2fixed = Cesium.Transforms.northWestUpToFixedFrame(position);
+                    const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed, new Cesium.Cartesian3(0, 0, 18), {});
+
+                    console.log(local2fixed);
+
+
+                    let mat3 = Cesium.Matrix4.getMatrix3(local2fixed, {});
+
+
+                    console.log(mat3);
+
+
+                    let fixed2local = Cesium.Quaternion.fromRotationMatrix(Cesium.Matrix3.inverse(mat3, {}));
+
+                    let local_ori = Cesium.Quaternion.multiply(fixed2local, orientation, {});
+                    const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(local_ori);
+
+
+                    console.log(headingPitchRoll.heading)
+                    console.log(headingPitchRoll.pitch);
+                    console.log(headingPitchRoll.roll);
+
 
                     viewer.camera.flyTo({
-                        destination: position,
+                        destination: higher_position,
                         orientation: {
                             heading: headingPitchRoll.heading,
                             pitch: headingPitchRoll.pitch,
@@ -70,13 +90,14 @@
                         }
                     });
 
-                    const normal =  Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
+                    const normal =  Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
 
                     viewer.entities.add({
-                        position: position,
+                        position: higher_position,
+                        orientation: orientation,
                         plane: {
                             plane: new Cesium.Plane(normal, 0.0),
-                            dimensions: new Cesium.Cartesian2(1.77, 1),
+                            dimensions: new Cesium.Cartesian2(3.54, 2),
                             material: new Cesium.ImageMaterialProperty({
                                 image: photoElement
                             }),
@@ -84,6 +105,16 @@
                             outlineColor: Cesium.Color.BLACK,
                         },
                     });
+
+                     viewer.entities.add({
+                       position: higher_position,
+                       orientation: orientation,
+                       model: {
+                         uri: '/content/frustum.glb',
+                         scale: 1,
+                         shadows: Cesium.ShadowMode.DISABLED
+                       }
+                     });
                 });
         } else {
             $goto('../localizephoto');

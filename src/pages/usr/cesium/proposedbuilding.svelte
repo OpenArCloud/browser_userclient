@@ -75,7 +75,7 @@
     let showAr = false;
 
     let isArsessionRunning = false;
-    let arAvailableMessage = '';
+    let arAvailableMessage = 'AR features required';
     const available = 'AR available';
 
     let gl = null;
@@ -222,7 +222,7 @@
 
     function initCesium() {
         // eslint-disable-next-line no-undef
-        Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjMwMzYwNi1lNTJiLTQwOWItODc0NS0wOGVhMWJjMjBhNWQiLCJpZCI6MjQyNjIsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODQ5MTY5MjB9.5yH_PV4X2a_yfqoRqXGwAXcIBFN7G0Rg70lbh97Hi-Y";
+        Cesium.Ion.defaultAccessToken = "";
         window.CESIUM_BASE_URL = '/';
 
         viewer = new Cesium.Viewer('cesiumcontainer', {
@@ -463,7 +463,7 @@
                         }
                     ]
                 };
-                const localisationUrl = `${serviceUrl}/scrs/geopose`;
+                const localisationUrl = `${serviceUrl}/scrs/geopose_objs`;
                 fetch(localisationUrl, {
                     method: "POST",
                     headers: {
@@ -574,7 +574,7 @@
     <button disabled={canAccessCamera === false || arAvailableMessage !== available ? 'disabled' : ''} on:click={startVideo} >Start</button>
 <!--    <input type="checkbox" bind:checked={skipLocalisation} />-->
 
-<!--    <div>{cameraStatusMessage}</div><div>{arAvailableMessage}</div><div>{serverErrorMessage}</div>-->
+    <div>{cameraStatusMessage}</div><div>{arAvailableMessage}</div><div>{serverErrorMessage}</div>
 <!--    <div><input bind:value={heightCorrection} /></div>-->
 
     <canvas bind:this={photoCanvas}></canvas>

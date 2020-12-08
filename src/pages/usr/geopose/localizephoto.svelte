@@ -178,7 +178,7 @@
                         }
                     ]
                 };
-                const localisationUrl = `${serviceUrl}/scrs/geopose`;
+                const localisationUrl = `${serviceUrl}/scrs/geopose_objs`;
                 fetch(localisationUrl, {
                     method: "POST",
                     headers: {
@@ -197,10 +197,10 @@
                     })
                     .then(data => {
                         isGeoposeLoaded = true;
-                        geopose.set(data);
+                        geopose.set(data.geopose);
 
                         geoposeLocationMessage =
-                            `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}, Quaternion: ${$geopose.pose.quaternion.toLocaleString()}`;
+                            `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}, Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}`;
                     })
                     .catch(error => {
                         console.error(error);
@@ -242,6 +242,19 @@
                 preview.src = $imageDataBase64;
                 filename = 'seattle.jpg';
             })
+    }
+
+    function getMirroredImage() {
+        return fetch('/photos/seattle_gps_mirror.jpg')
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
+            })
+    }
+
+    function openMap() {
+        getMirroredImage()
+            .then(() => $goto('../photomap'));
     }
 </script>
 
@@ -312,7 +325,7 @@
 
         {#if isGeoposeLoaded === true}
             <div class="centered">
-                <button class="selectbutton" on:click={$goto('../photomap')}>Place on 3D Map</button>
+                <button class="selectbutton" on:click={openMap}>Place on 3D Map</button>
             </div>
         {/if}
 
