@@ -92,8 +92,8 @@
                        position: higher_position,
                        orientation: orientation,
                        model: {
-                         uri: '/content/frustum.glb',
-                         scale: 1,
+                         uri: '/content/frustum.gltf',
+                         scale: 0.01,
                          shadows: Cesium.ShadowMode.DISABLED
                        }
                      });

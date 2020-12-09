@@ -5,11 +5,11 @@
 
 <style>
     #dropzone {
-        height: 4rem;
+        /*height: 4rem;*/
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin: 2rem;
+        /* margin: 2rem; */
     }
 
     #dropzone.disabled {
@@ -18,8 +18,8 @@
     }
 
     #dropzone button {
-        margin: auto;
-        padding: 1.5rem 5rem;
+        /* margin: auto; */
+        /* padding: 1.5rem 5rem; */
     }
 
     input[type=file] {
@@ -86,8 +86,8 @@
 <div id="dropzone" class:disabled={!dropEnabled} on:drop={handleDrop} on:dragover={handleDropOver}>
     <span>{message}</span>
     <button disabled={!dropEnabled}>
-        <label for="fileinput">{buttonLabel}</label>
-        <input id="fileinput" type="file" disabled={!dropEnabled} accept={accepts} on:change={handleFileInput}/>
+        {buttonLabel}
+        <input type="file" disabled={!dropEnabled} accept={accepts} on:change={handleFileInput}/>
     </button>
     <slot name="alternative" />
 </div>

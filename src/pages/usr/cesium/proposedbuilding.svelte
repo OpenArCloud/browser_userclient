@@ -18,7 +18,7 @@
     }
 
     #capturewrapper {
-        position: absolute;
+        position: fixed;
         left: 0;
         bottom: 0;
         width: 100vw;
@@ -30,6 +30,7 @@
         width: 70px;
         height: 70px;
         border-radius: 50%;
+        outline: none;
         background-color: rgba(138, 136, 136, 0.5);
     }
 
@@ -473,7 +474,7 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                            throw new Error('Localisation failed');
                         }
 
                         return response.json();
@@ -552,30 +553,37 @@
         <div id="cesiumcontainer"></div>
     </div>
 
-    <h3>Proposed building in AR</h3>
-    <p>
-        Inspired by the proposed building tutorial from the Cesium website, this experiment recreates it in AR space.
-        Replacing the virtual terrain and buildings with the real world environment, the effect of the proposed
-        building to the surrounding can be seen very clearly.
-    </p>
-    <dl>
-        <dt>The process to determine the current location and orientation of the device is like this:</dt>
-        <dd>Take a photo with the device camera</dd>
-        <dd>Request the available services from the regional Spatial Services Discovery</dd>
-        <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
-        <dd>Forward the poses received from WebXR to Cesium</dd>
-    </dl>
-    <p>
-        As the current location is determined by a photo from the current location, and available services are
-        requested from the Spatial Services Discovery, this experiment can be used everywhere a GeoPose service is
-        available.
-    </p>
+    <div class="contentwrapper">
+        <h2>Proposed building in AR</h2>
+        <p>
+            Inspired by the proposed building tutorial from the Cesium website, this experiment recreates it in AR
+            space.
+            Replacing the virtual terrain and buildings with the real world environment, the effect of the proposed
+            building to the surrounding can be seen very clearly.
+        </p>
+        <dl class="processlist">
+            <dt>The process to determine the current location and orientation of the device is like this:</dt>
+            <dd>Take a photo with the device camera</dd>
+            <dd>Request the available services from the regional Spatial Services Discovery</dd>
+            <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
+            <dd>Forward the poses received from WebXR to Cesium</dd>
+        </dl>
+        <p>
+            As the current location is determined by a photo from the current location, and available services are
+            requested from the Spatial Services Discovery, this experiment can be used everywhere a GeoPose service is
+            available.
+        </p>
 
-    <button disabled={canAccessCamera === false || arAvailableMessage !== available ? 'disabled' : ''} on:click={startVideo} >Start</button>
-<!--    <input type="checkbox" bind:checked={skipLocalisation} />-->
+        <button disabled={canAccessCamera === false || arAvailableMessage !== available ? 'disabled' : ''}
+                on:click={startVideo}>Start
+        </button>
+        <!--    <input type="checkbox" bind:checked={skipLocalisation} />-->
 
-    <div>{cameraStatusMessage}</div><div>{arAvailableMessage}</div><div>{serverErrorMessage}</div>
-<!--    <div><input bind:value={heightCorrection} /></div>-->
+        <div class="statusmessage">{cameraStatusMessage}</div>
+        <div class="statusmessage">{arAvailableMessage}</div>
+        <div class="statusmessage">{serverErrorMessage}</div>
+        <!--    <div><input bind:value={heightCorrection} /></div>-->
+    </div>
 
     <canvas bind:this={photoCanvas}></canvas>
 </div>

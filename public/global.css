@@ -7,10 +7,14 @@ html, body {
 body {
 	display: grid;
 	grid-template-rows: auto 1fr;
-	color: #333;
+	color: #2e4458;
 	margin: 0;
 	padding: 0;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	font: normal normal 600 13px/17px Montserrat, Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.contentwrapper {
+	margin: 0 40px;
 }
 
 a {
@@ -19,6 +23,14 @@ a {
 }
 
 h2 {
+	margin-bottom: 25px;
+}
+
+h3 {
+	margin-bottom: 5px;
+}
+
+h2, h3 {
 	color: #ea6237;
 }
 
@@ -35,15 +47,22 @@ input:disabled {
 	color: #ccc;
 }
 
+
 button {
-	color: #333;
-	background-color: #f4f4f4;
-	outline: none;
+	display: block;
+	width: 293px;
+	height: 60px;
+	color: #fff;
+	font-size: 25px;
+	background-color: #2E4458;
+	border: 2px solid #2E4458;
 }
 
 button:disabled {
-	color: #999;
-}
+	width: 293px;
+	height: 60px;
+	background-color: #868686;
+	border: 2px solid #868686;}
 
 button:not(:disabled):active {
 	background-color: #ddd;
@@ -51,6 +70,26 @@ button:not(:disabled):active {
 
 button:focus {
 	border-color: #666;
+}
+
+summary {
+	margin-bottom: 5px;
+}
+
+.card dd {
+	margin: 0;
+}
+
+.processlist dd {
+	margin: 10px 15px;
+}
+
+.statusmessage {
+	width: 293px;
+	margin:5px;
+	text-align: center;
+	font-size: 19px;
+	color: #868686;
 }
 
 .hidden {

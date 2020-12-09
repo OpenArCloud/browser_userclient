@@ -4,6 +4,14 @@
 -->
 
 <style>
+    summary {
+        outline: none;
+    }
+
+    p {
+        margin-top: 0;
+    }
+
     #preview {
         width: 75vw;
     }
@@ -16,25 +24,11 @@
         font-weight: bold;
     }
 
-    .selectbutton {
-        position: relative;
-        margin: auto;
-        padding: 1.5rem 5rem;
-    }
-
-    .selectbutton img {
-        position: absolute;
-        top: 0px;
-        left: 5.5rem;
-        width: 70px;
-    }
-
     .centered {
         height: 4rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin: 2rem;
     }
 
     .hidden {
@@ -114,7 +108,7 @@
                 setCountryCode();
 
                 photoHasLocation = true;
-                photoLocationMessage = `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}`;
+                photoLocationMessage = `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)}</div>`;
             } else {
                 latAngle = undefined;
                 lonAngle = undefined;
@@ -200,7 +194,7 @@
                         geopose.set(data.geopose);
 
                         geoposeLocationMessage =
-                            `Lat: ${round(latAngle, 3)}, Lon: ${round(lonAngle, 3)}, Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}`;
+                            `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)},</div><div>Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}</div>`;
                     })
                     .catch(error => {
                         console.error(error);
@@ -246,45 +240,49 @@
 </script>
 
 
-<div>
-    <h3>Photo positioning</h3>
-    <p>
-        Given a photo with rough coordinates where it was shot, it is possible to position it in 3D
-        at the exact position and rotation it was shot.
-    </p>
+<div class="contentwrapper">
+    <h2>Photo positioning</h2>
 
-    <dl>
-        <dt>The process to determine the required information is like this:</dt>
-        <dd>Request the available services from the regional Spatial Services Discovery</dd>
-        <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
-        <dd>Add the photo to Cesium at the received location and rotation</dd>
-    </dl>
+    <details open>
+        <summary>Intro</summary>
+        <p>
+            Given a photo with rough coordinates where it was shot, it is possible to position it in 3D
+            at the exact position and rotation it was shot.
+        </p>
 
-    <p>
-        This means that this can be done in every region with any photo where the rough location it was shot at is known
-        and any GeoPose service provider is available. For this demo, we use the location embedded in the EXIF metadata.
-        But it can be provided from other sources, too.
-    </p>
+        <dl class="processlist">
+            <dt>The process to determine the required information is like this:</dt>
+            <dd>Request the available services from the regional Spatial Services Discovery</dd>
+            <dd>Choose a GeoPose service and request the GeoPose from the photo</dd>
+            <dd>Add the photo to Cesium at the received location and rotation</dd>
+        </dl>
 
-    <p>
-        The capability to position visual content like this in a 3D environment Cesium provides, has lots of interesting
-        applications, especially when taking the terrain away and using it in an AR environment.
-    </p>
+        <p>
+            This means that this can be done in every region with any photo where the rough location it was shot at is known
+            and any GeoPose service provider is available. For this demo, we use the location embedded in the EXIF metadata.
+            But it can be provided from other sources, too.
+        </p>
+
+        <p>
+            The capability to position visual content like this in a 3D environment Cesium provides, has lots of interesting
+            applications, especially when taking the terrain away and using it in an AR environment.
+        </p>
+    </details>
 
     <div>
-        <p class="title">Location from photo:</p>
+        <h3 class="title">Location from photo:</h3>
         {#if photoHasLocation === false}
-            <p>{photoLocationMessage}</p>
+            <p>{@html photoLocationMessage}</p>
             <Import accepts="image/jpeg" buttonLabel="Select photo" postFileFunction="{loadPhoto}">
-                <button id="defaultbutton" class="selectbutton" slot="alternative" on:click={getDefaultImage} >Take Default</button>
+                <button id="defaultbutton" class="selectbutton" slot="alternative" on:click={getDefaultImage}>Take Default</button>
             </Import>
         {:else}
-            <p>{photoLocationMessage}</p>
+            <p>{@html photoLocationMessage}</p>
         {/if}
 
         {#if photoHasLocation === true && isGeoposeLoaded === false}
-            <p class="title">GeoPose from photo:</p>
-            <p>{geoposeLocationMessage}</p>
+            <h3 class="title">GeoPose from photo:</h3>
+            <p>{@html geoposeLocationMessage}</p>
             <div class="centered">
                 <button class="selectbutton"
                         disabled="{latAngle === undefined || lonAngle === undefined || accessingGeoPoseServer === true}"
@@ -296,8 +294,8 @@
                 </button>
             </div>
         {:else if isGeoposeLoaded === true}
-            <p class="title">GeoPose from photo:</p>
-            <p>{geoposeLocationMessage}</p>
+            <h3 class="title">GeoPose from photo:</h3>
+            <p>{@html geoposeLocationMessage}</p>
         {/if}
 
         {#if isGeoposeLoaded === true}
