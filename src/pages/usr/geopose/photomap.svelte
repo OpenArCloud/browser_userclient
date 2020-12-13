@@ -19,16 +19,20 @@
 
     import { goto } from '@sveltech/routify';
 
-    import { geopose, imageDataBase64 } from "./geoposestore.js";
+    import { geopose, imageDataBase64, imageRotation } from "./geoposestore.js";
 
     import * as Cesium from 'cesium';
-    import "cesium/Build/Cesium/Widgets/widgets.css";
 
-    window.CESIUM_BASE_URL = '/';
+    // eslint-disable-next-line no-undef
+    // Cesium.Ion.defaultAccessToken = oscp_client.env["CESIUM_KEY"];
     Cesium.Ion.defaultAccessToken = '';
+    window.CESIUM_BASE_URL = '/';
 
 
     let viewer;
+    let isPhotoTranslucent = false;
+
+    const planeSize = $imageRotation !== 'none' ? [2, 3.54] : [3.54, 2]
 
 
     onMount(() => {
@@ -40,7 +44,9 @@
         });
 
         if ($geopose.ecef !== undefined) {
-            const positions = [Cesium.Cartographic.fromCartesian(new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z))];
+            const positions = [Cesium.Cartographic.fromCartesian(
+                new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z))];
+
             Cesium.sampleTerrainMostDetailed(terrainProvider, positions)
                 .then(updatedPositions => {
                     const photoElement = document.createElement('img');
@@ -49,17 +55,20 @@
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
                     const position = new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z);
-                    const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0], $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
+                    const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0],
+                        $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
 
                     const local2fixed = Cesium.Transforms.northWestUpToFixedFrame(position);
-                    const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed, new Cesium.Cartesian3(0, 0, updatedPositions[0].height + $geopose.pose.altitude * 10), {});
 
-                    let mat3 = Cesium.Matrix4.getMatrix3(local2fixed, {});
+                    // TODO: Adapt when more accurate height is sent from GeoPose service
+                    const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed,
+                        new Cesium.Cartesian3(0, 0, updatedPositions[0].height + 1.7), {});
 
-                    let fixed2local = Cesium.Quaternion.fromRotationMatrix(Cesium.Matrix3.inverse(mat3, {}));
+                    const mat3 = Cesium.Matrix4.getMatrix3(local2fixed, {});
 
-                    let local_ori = Cesium.Quaternion.multiply(fixed2local, orientation, {});
-                    const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(local_ori);
+                    const fixed2local = Cesium.Quaternion.fromRotationMatrix(Cesium.Matrix3.inverse(mat3, {}));
+                    const localOrientation = Cesium.Quaternion.multiply(fixed2local, orientation, {});
+                    const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(localOrientation);
 
                     viewer.camera.flyTo({
                         destination: higher_position,
@@ -74,12 +83,19 @@
 
                     const normal =  Cesium.Cartesian3.clone(new Cesium.Cartesian3(-1.0, 0.0, 0.0));
 
-                    viewer.entities.add({
+                    let planeOrientation = orientation;
+                    if ($imageRotation !== 'none') {
+                        const rotation = $imageRotation === 'left' ? -0.5 : $imageRotation === 'right' ? 0.5 : 1;
+                        planeOrientation = Cesium.Quaternion.multiply(orientation,
+                            Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(1, 0, 0), rotation * Math.PI), {});
+                    }
+
+                    const planeEntity = viewer.entities.add({
                         position: higher_position,
-                        orientation: orientation,
+                        orientation: planeOrientation,
                         plane: {
                             plane: new Cesium.Plane(normal, 0.0),
-                            dimensions: new Cesium.Cartesian2(3.54, 2),
+                            dimensions: new Cesium.Cartesian2(planeSize[0], planeSize[1]),
                             material: new Cesium.ImageMaterialProperty({
                                 image: photoElement
                             }),
@@ -87,6 +103,16 @@
                             outlineColor: Cesium.Color.BLACK,
                         },
                     });
+
+                    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+                    handler.setInputAction(movement => {
+                        const pickedObject = viewer.scene.pick(movement.position);
+                        if (Cesium.defined(pickedObject) && pickedObject.id === planeEntity) {
+                            isPhotoTranslucent = !isPhotoTranslucent;
+                            planeEntity.plane.material.color = isPhotoTranslucent ?
+                                Cesium.Color.fromRgba(0x88ffffff) : Cesium.Color.fromRgba(0xffffffff);
+                        }
+                    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
                      viewer.entities.add({
                        position: higher_position,
@@ -97,11 +123,18 @@
                          shadows: Cesium.ShadowMode.DISABLED
                        }
                      });
-                });
+                })
+                .otherwise((error) => console.log(error));
         } else {
             $goto('../localizephoto');
         }
     })
 </script>
 
+
 <div id="cesiumContainer"></div>
+
+
+<svelte:head>
+    <link rel="stylesheet" href="/Widgets/widgets.css" />
+</svelte:head>

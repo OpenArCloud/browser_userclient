@@ -22,6 +22,12 @@
         /* padding: 1.5rem 5rem; */
     }
 
+    label[for=fileinput] {
+        width: 100%;
+        height: 100%;
+        display: inline-block;
+    }
+
     input[type=file] {
         display: none;
     }
@@ -86,8 +92,8 @@
 <div id="dropzone" class:disabled={!dropEnabled} on:drop={handleDrop} on:dragover={handleDropOver}>
     <span>{message}</span>
     <button disabled={!dropEnabled}>
-        {buttonLabel}
-        <input type="file" disabled={!dropEnabled} accept={accepts} on:change={handleFileInput}/>
+        <label for="fileinput">{buttonLabel}</label>
+        <input id="fileinput" type="file" disabled={!dropEnabled} accept={accepts} on:change={handleFileInput}/>
     </button>
     <slot name="alternative" />
 </div>

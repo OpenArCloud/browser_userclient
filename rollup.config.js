@@ -4,21 +4,24 @@
  */
 
 import svelte from 'rollup-plugin-svelte';
-import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
+import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
-import copy from 'rollup-plugin-copy';
-import {config} from 'dotenv';
-import postcss from 'rollup-plugin-postcss';
-import replace from '@rollup/plugin-replace';
-import {routify} from '@sveltech/routify';
-import cleaner from 'rollup-plugin-cleaner';
-import fs from "fs";
-// import analyze from 'rollup-plugin-analyzer';
+import css from 'rollup-plugin-css-only';
 
+import json from '@rollup/plugin-json';
+import copy from 'rollup-plugin-copy';
+import replace from '@rollup/plugin-replace';
+import cleaner from 'rollup-plugin-cleaner';
 import path from 'path';
+
+import { config } from 'dotenv';
+import { routify } from '@sveltech/routify';
+
+import fs from "fs";
+
+// import analyze from 'rollup-plugin-analyzer';
 
 
 const production = !process.env.ROLLUP_WATCH;
@@ -66,14 +69,15 @@ export default {
 		}),
 
 		svelte({
-			// enable run-time checks when not in production
-			dev: !production,
-			// we'll extract any component CSS out into
-			// a separate file - better for performance
-			css: css => {
-				css.write('bundle.css');
+			compilerOptions: {
+				// enable run-time checks when not in production
+				dev: !production
 			}
 		}),
+
+		// we'll extract any component CSS out into
+		// a separate file - better for performance
+		css({ output: 'bundle.css' }),
 
 		//Dynamic import support
 		routify({ dynamicImports : true}),
@@ -94,10 +98,6 @@ export default {
 			browser: true,
 			dedupe: ['svelte'],
 			preferBuiltins: false
-		}),
-
-		postcss({
-			extensions: [ '.css' ]
 		}),
 
 		copy({

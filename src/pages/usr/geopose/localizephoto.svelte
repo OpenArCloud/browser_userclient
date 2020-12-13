@@ -42,7 +42,7 @@
 
     import { goto } from '@sveltech/routify';
 
-    import { geopose, imageDataBase64 } from "./geoposestore.js";
+    import { geopose, imageDataBase64, imageRotation } from "./geoposestore.js";
 
     import { getServicesAtLocation } from 'ssd-access';
     import * as h3 from "h3-js";
@@ -102,6 +102,8 @@
             const lonRef = EXIF.getTag(this, "GPSLongitudeRef") === 'W' ? -1 : 1;
 
             if (lat !== undefined && lon !== undefined) {
+                imageRotation.set(decodeRotation(EXIF.getTag(this, "Orientation")));
+
                 latAngle = Number((lat[0]) + Number(lat[1]) / 60 + Number(lat[2]) / (60 * 60)) * latRef;
                 lonAngle = Number((lon[0]) + Number(lon[1]) / 60 + Number(lon[2]) / (60 * 60)) * lonRef;
 
@@ -237,6 +239,24 @@
                 filename = 'seattle.jpg';
             })
     }
+
+    function decodeRotation(rotation) {
+        let result = 'none'
+
+        switch (rotation) {
+            case 8:
+                result = 'right';
+                break;
+            case 3:
+                result = 'half';
+                break;
+            case 6:
+                result = 'left';
+                break;
+        }
+
+        return result;
+    }
 </script>
 
 
@@ -268,6 +288,12 @@
             applications, especially when taking the terrain away and using it in an AR environment.
         </p>
     </details>
+
+    <p>
+        Note: Currently, this experiment works with <a href="https://www.augmented.city/">Augmented City</a> and soon
+        with <a href="https://immersal.com/">Immersal</a>. Others to come. Feel free to contact them when you are
+        interested to map an area you want to make this experiment work.
+    </p>
 
     <div>
         <h3 class="title">Location from photo:</h3>

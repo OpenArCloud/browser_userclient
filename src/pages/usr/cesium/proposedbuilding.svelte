@@ -61,7 +61,6 @@
     import { Gltf2Node } from '../../../third-party/render/nodes/gltf2.js';
 
     import * as Cesium from 'cesium';
-    import "cesium/Build/Cesium/Widgets/widgets.css";
 
     import * as h3 from "h3-js";
     import {v4 as uuidv4} from "uuid";
@@ -592,4 +591,5 @@
 
 <svelte:head>
     <script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.16.0/dist/numjs.min.js"></script>
+    <link rel="stylesheet" href="/Widgets/widgets.css" />
 </svelte:head>
