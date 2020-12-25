@@ -45,8 +45,16 @@
     import { geopose, imageDataBase64, imageRotation } from "./geoposestore.js";
 
     import { getServicesAtLocation } from 'ssd-access';
-    import * as h3 from "h3-js";
+    import { sendRequest } from 'gpp-access';
+    import GeoPoseRequest from 'gpp-access/request/GeoPoseRequest.js';
+    import Sensor from 'gpp-access/request/Sensor.js';
+    import SensorReading from 'gpp-access/request/SensorReading.js';
+    import CameraReading from 'gpp-access/request/readings/CameraReading.js';
+    import GeoLocationReading from 'gpp-access/request/readings/GeoLocationReading.js';
+    import ImageOrientation from 'gpp-access/request/options/ImageOrientation.js';
+    import { IMAGEFORMAT, SENSORTYPE } from 'gpp-access/GppGlobals.js';
 
+    import * as h3 from "h3-js";
     import { v4 as uuidv4 } from 'uuid';
 
 
@@ -120,88 +128,62 @@
         });
     }
 
-    function localizePhoto() {
+    async function localizePhoto() {
         accessingGeoPoseServer = true;
 
+        const serviceUrl = await requestServiceUrl();
+        const geoPoseRequest = buildRequest();
+
+        sendRequest(serviceUrl, geoPoseRequest)
+            .then(data => {
+                isGeoposeLoaded = true;
+                accessingGeoPoseServer = false;
+
+                geopose.set(data.geopose);
+                geoposeLocationMessage =
+                    `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)},</div><div>Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}</div>`;
+            })
+            .catch(error => {
+                console.error(error);
+                geoposeLocationMessage = "No GeoPose found. Maybe the map isn't public";
+            });
+    }
+
+    function buildRequest() {
+        // TODO: Get from EXIF
+        const imageSize = [1920, 1080];
+        const imageBytes = $imageDataBase64.split(',')[1];
+
+        const cameraSensor = new Sensor('0', SENSORTYPE.camera);
+        const cameraReading = new SensorReading('0')
+            .setReading(new CameraReading(0, IMAGEFORMAT.JPG, imageSize, imageBytes, new ImageOrientation(false, 0)));
+
+        const locationSensor = new Sensor('1', SENSORTYPE.geolocation);
+        const locationReading = new SensorReading('1')
+            .setReading(new GeoLocationReading(latAngle, lonAngle, 0, 0, 0, 0, 0));
+
+        return new GeoPoseRequest(uuidv4())
+            .addSensorData(cameraSensor, cameraReading)
+            .addSensorData(locationSensor, locationReading);
+    }
+
+    function requestServiceUrl() {
         const h3Index = h3.geoToH3(latAngle, lonAngle, 8);
 
-        getServicesAtLocation(selectedCountry.text, h3Index)
+        return getServicesAtLocation(selectedCountry.text, h3Index)
             .then(data => {
                 if (data.length !== 0) {
-                    return data[0].services[0].url;
+                    let url = data[0].services[0].url;
+
+                    if (!url.includes('https://')) {
+                        url = url.replace('http://', 'https://');
+                    }
+
+                    return url;
                 } else {
-                    // no ssd available in the requested country. Checking with Augmented City as a fallback for now
+                    // no ssd available in the requested country. Using Augmented City as a fallback for now
                     return 'http://developer.augmented.city';
                 }
-            })
-            .then(serviceUrl => {
-                if (!serviceUrl.includes('https://')) {
-                    serviceUrl = serviceUrl.replace('http://', 'https://');
-                }
-
-                const requestBody = {
-                    "id": uuidv4(),
-                    "timestamp": Date.now().toString(),
-                    "type": "geopose",
-                    "sensors": [{
-                            "id": "0",
-                            "type": "camera"
-                        }, {
-                            "id": "1",
-                            "type": "geolocation"
-                        }],
-                    "sensorReadings": [{
-                            "timestamp": Date.now().toString(),
-                            "sensorId": "0",
-                            "reading": {
-                                "sequenceNumber": 0,
-                                "imageFormat": "JPG",
-                                "imageOrientation": {
-                                    "mirrored": false,
-                                    "rotation": 0
-                                },
-                                "imageBytes": $imageDataBase64.split(',')[1]
-                            }
-                        },
-                        {
-                            "timestamp": Date.now().toString(),
-                            "sensorId": "1",
-                            "reading": {
-                                "latitude": latAngle,
-                                "longitude": lonAngle,
-                                "altitude": 0
-                            }
-                        }
-                    ]
-                };
-                const localisationUrl = `${serviceUrl}/scrs/geopose_objs`;
-                fetch(localisationUrl, {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                })
-                    .then(response => {
-                        accessingGeoPoseServer = false;
-
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-
-                        return response.json();
-                    })
-                    .then(data => {
-                        isGeoposeLoaded = true;
-                        geopose.set(data.geopose);
-
-                        geoposeLocationMessage =
-                            `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)},</div><div>Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}</div>`;
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        geoposeLocationMessage = "No GeoPose found. Maybe the map isn't public";
-                    });
             })
     }
 
