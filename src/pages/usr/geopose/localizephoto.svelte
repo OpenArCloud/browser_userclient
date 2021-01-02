@@ -45,18 +45,18 @@
     import { geopose, imageDataBase64, imageRotation } from "./geoposestore.js";
 
     import { getServicesAtLocation } from 'ssd-access';
-    import { sendRequest } from 'gpp-access';
+    import { sendRequest, objectEndpoint } from 'gpp-access';
     import GeoPoseRequest from 'gpp-access/request/GeoPoseRequest.js';
-    import Sensor from 'gpp-access/request/Sensor.js';
-    import SensorReading from 'gpp-access/request/SensorReading.js';
-    import CameraReading from 'gpp-access/request/readings/CameraReading.js';
-    import GeoLocationReading from 'gpp-access/request/readings/GeoLocationReading.js';
     import ImageOrientation from 'gpp-access/request/options/ImageOrientation.js';
-    import { IMAGEFORMAT, SENSORTYPE } from 'gpp-access/GppGlobals.js';
+    import { IMAGEFORMAT } from 'gpp-access/GppGlobals.js';
 
     import * as h3 from "h3-js";
     import { v4 as uuidv4 } from 'uuid';
 
+
+    // TODO: Get from EXIF
+    const imageSize = [1920, 1080];
+    $: imageBytes = $imageDataBase64.split(',')[1];
 
     let preview;
     let isPhotoLoaded = false;
@@ -132,9 +132,11 @@
         accessingGeoPoseServer = true;
 
         const serviceUrl = await requestServiceUrl();
-        const geoPoseRequest = buildRequest();
+        const geoPoseRequest = new GeoPoseRequest(uuidv4())
+            .addLocationData(latAngle, lonAngle, 0, 0, 0, 0, 0)
+            .addCameraData(IMAGEFORMAT.JPG, imageSize, imageBytes, 0, new ImageOrientation(false, 0));
 
-        sendRequest(serviceUrl, geoPoseRequest)
+        sendRequest(`${serviceUrl}/${objectEndpoint}`, JSON.stringify(geoPoseRequest))
             .then(data => {
                 isGeoposeLoaded = true;
                 accessingGeoPoseServer = false;
@@ -147,24 +149,6 @@
                 console.error(error);
                 geoposeLocationMessage = "No GeoPose found. Maybe the map isn't public";
             });
-    }
-
-    function buildRequest() {
-        // TODO: Get from EXIF
-        const imageSize = [1920, 1080];
-        const imageBytes = $imageDataBase64.split(',')[1];
-
-        const cameraSensor = new Sensor('0', SENSORTYPE.camera);
-        const cameraReading = new SensorReading('0')
-            .setReading(new CameraReading(0, IMAGEFORMAT.JPG, imageSize, imageBytes, new ImageOrientation(false, 0)));
-
-        const locationSensor = new Sensor('1', SENSORTYPE.geolocation);
-        const locationReading = new SensorReading('1')
-            .setReading(new GeoLocationReading(latAngle, lonAngle, 0, 0, 0, 0, 0));
-
-        return new GeoPoseRequest(uuidv4())
-            .addSensorData(cameraSensor, cameraReading)
-            .addSensorData(locationSensor, locationReading);
     }
 
     function requestServiceUrl() {
@@ -294,7 +278,7 @@
             <div class="centered">
                 <button class="selectbutton"
                         disabled="{latAngle === undefined || lonAngle === undefined || accessingGeoPoseServer === true}"
-                        on:click={localizePhoto}>
+                        on:click={  localizePhoto}>
                     Localize photo
                     {#if accessingGeoPoseServer === true}
                         <img src="/spinner.svg" />

@@ -222,7 +222,7 @@
 
     function initCesium() {
         // eslint-disable-next-line no-undef
-        Cesium.Ion.defaultAccessToken = "";
+        Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NjMwMzYwNi1lNTJiLTQwOWItODc0NS0wOGVhMWJjMjBhNWQiLCJpZCI6MjQyNjIsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODQ5MTY5MjB9.5yH_PV4X2a_yfqoRqXGwAXcIBFN7G0Rg70lbh97Hi-Y";
         window.CESIUM_BASE_URL = '/';
 
         viewer = new Cesium.Viewer('cesiumcontainer', {
