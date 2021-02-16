@@ -5,7 +5,7 @@
     "build": "rollup -c",
     "dev": "routify -c my-server",
     "my-server": "rollup -c -w",
-    "start": "sirv public --single  --http2 --key localhost-key.pem --cert localhost-cert.pem --host 192.168.86.30 --port 5001",
+    "start": "sirv public --single  --http2 --key localhost-key.pem --cert localhost-cert.pem --host --port 5001",
     "lint": "eslint . --ext .js,.svelte --fix"
   },
   "devDependencies": {
