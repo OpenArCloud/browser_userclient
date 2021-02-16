@@ -9,6 +9,6 @@
 /assets/
 
 .DS_Store
-/localhost.cert
-/localhost.key
+/localhost-cert.pem
+/localhost-key.pem
 /src/.env
