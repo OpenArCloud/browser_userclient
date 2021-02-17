@@ -75,62 +75,19 @@
     let round = (number) => Math.round(number * 1000) / 1000;
 
 
-    function loadPhoto(file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-            preview.src = reader.result;
-            imageDataBase64.set(reader.result);
-            filename = file.name;
-        };
-        reader.onerror = () => {
-            reader.abort();
-            console.log(`Unable to get Content of ${file.name}: ${reader.error}`);
-        };
-
-        reader.readAsDataURL(file);
-    }
-
-    function photoLoaded(event) {
-        isPhotoLoaded = true;
-
-        // TODO: BUG - Use different EXIF reader, because this one caches the data internally
-        /* eslint-disable no-undef */
-        EXIF.getData(event.target, () => {
-            const lat = EXIF.getTag(this, "GPSLatitude");
-            const latRef = EXIF.getTag(this, "GPSLatitudeRef") === 'S' ? -1 : 1;
-            const lon = EXIF.getTag(this, "GPSLongitude");
-            const lonRef = EXIF.getTag(this, "GPSLongitudeRef") === 'W' ? -1 : 1;
-
-            if (lat !== undefined && lon !== undefined) {
-                imageRotation.set(decodeRotation(EXIF.getTag(this, "Orientation")));
-
-                latAngle = Number((lat[0]) + Number(lat[1]) / 60 + Number(lat[2]) / (60 * 60)) * latRef;
-                lonAngle = Number((lon[0]) + Number(lon[1]) / 60 + Number(lon[2]) / (60 * 60)) * lonRef;
-
-                setCountryCode();
-
-                photoHasLocation = true;
-                photoLocationMessage = `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)}</div>`;
-            } else {
-                latAngle = undefined;
-                lonAngle = undefined;
-
-                photoLocationMessage = 'No location found. Try another photo with location available in EXIF data';
-            }
-        });
-    }
-
+    /* Localisation of the photo */
     function localizePhoto() {
         accessingGeoPoseServer = true;
 
         const h3Index = h3.geoToH3(latAngle, lonAngle, 8);
 
+        // Request available services in the area where the photo was taken
         getServicesAtLocation(selectedCountry.text, h3Index)
             .then(data => {
                 if (data.length !== 0) {
                     return data[0].services[0].url;
                 } else {
-                    // no ssd available in the requested country. Checking with Augmented City as a fallback for now
+                    // No ssd available in the requested country. Checking with Augmented City as a fallback for now
                     return 'http://developer.augmented.city';
                 }
             })
@@ -139,6 +96,8 @@
                     serviceUrl = serviceUrl.replace('http://', 'https://');
                 }
 
+                // Create request according GeoPose protocol
+                // TODO: use gpp-access instead
                 const requestBody = {
                     "id": uuidv4(),
                     "timestamp": Date.now().toString(),
@@ -174,6 +133,8 @@
                         }
                     ]
                 };
+
+                // Service request URL based on data returned from discovery service
                 const localisationUrl = `${serviceUrl}/scrs/geopose_objs`;
                 fetch(localisationUrl, {
                     method: "POST",
@@ -196,7 +157,8 @@
                         geopose.set(data.geopose);
 
                         geoposeLocationMessage =
-                            `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)},</div><div>Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}</div>`;
+                            `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)},
+                             </div><div>Quaternion: ${$geopose.ecef.quaternion.toLocaleString()}</div>`;
                     })
                     .catch(error => {
                         console.error(error);
@@ -205,6 +167,7 @@
             })
     }
 
+    /* Determine the country code from the location stored in the EXIF data of the photo */
     function setCountryCode() {
         fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latAngle}&lon=${lonAngle}&format=json&zoom=1&email=info%40michaelvogt.eu`)
             .then((response) => {
@@ -227,19 +190,67 @@
             .catch((error) => {
                 throw new Error(error);
             })
-
     }
 
+    /* Load hard coded photo from server and encode it in base64 */
     function getDefaultImage() {
         fetch('/photos/seattle_gps.jpg')
             .then(response => response.arrayBuffer())
             .then(buffer => {
-                imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
                 preview.src = $imageDataBase64;
+                imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
                 filename = 'seattle.jpg';
             })
     }
 
+    /* Utility function to read selected photo from disc and encode it in base64 */
+    function loadPhoto(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            preview.src = reader.result;
+            imageDataBase64.set(reader.result);
+            filename = file.name;
+        };
+        reader.onerror = () => {
+            reader.abort();
+            console.log(`Unable to get Content of ${file.name}: ${reader.error}`);
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    /* Utility function to read the EXIF data from a photo just loaded into the app */
+    function photoLoaded(event) {
+        isPhotoLoaded = true;
+
+        // TODO: BUG - Use different EXIF reader, because this one caches the data internally
+        /* eslint-disable no-undef */
+        EXIF.getData(event.target, () => {
+            const lat = EXIF.getTag(this, "GPSLatitude");
+            const latRef = EXIF.getTag(this, "GPSLatitudeRef") === 'S' ? -1 : 1;
+            const lon = EXIF.getTag(this, "GPSLongitude");
+            const lonRef = EXIF.getTag(this, "GPSLongitudeRef") === 'W' ? -1 : 1;
+
+            if (lat !== undefined && lon !== undefined) {
+                imageRotation.set(decodeRotation(EXIF.getTag(this, "Orientation")));
+
+                latAngle = Number((lat[0]) + Number(lat[1]) / 60 + Number(lat[2]) / (60 * 60)) * latRef;
+                lonAngle = Number((lon[0]) + Number(lon[1]) / 60 + Number(lon[2]) / (60 * 60)) * lonRef;
+
+                setCountryCode();
+
+                photoHasLocation = true;
+                photoLocationMessage = `<div>Lat: ${round(latAngle, 3)},</div><div>Lon: ${round(lonAngle, 3)}</div>`;
+            } else {
+                latAngle = undefined;
+                lonAngle = undefined;
+
+                photoLocationMessage = 'No location found. Try another photo with location available in EXIF data';
+            }
+        });
+    }
+
+    /* Utility function to determine rotation of the photo as defined in EXIF data */
     function decodeRotation(rotation) {
         let result = 'none'
 

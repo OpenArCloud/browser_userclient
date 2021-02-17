@@ -54,6 +54,7 @@
 
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
+                    // Convert base of coordinates from GeoPose to what Cesium needs
                     const position = new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z);
                     const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0],
                         $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
@@ -70,6 +71,7 @@
                     const localOrientation = Cesium.Quaternion.multiply(fixed2local, orientation, {});
                     const headingPitchRoll = Cesium.HeadingPitchRoll.fromQuaternion(localOrientation);
 
+                    // Move Cesium camera to position and orientation as reported from GeoPose services
                     viewer.camera.flyTo({
                         destination: higher_position,
                         orientation: {
@@ -90,6 +92,7 @@
                             Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(1, 0, 0), rotation * Math.PI), {});
                     }
 
+                    // Position photo at the location it was shot
                     const planeEntity = viewer.entities.add({
                         position: higher_position,
                         orientation: planeOrientation,
