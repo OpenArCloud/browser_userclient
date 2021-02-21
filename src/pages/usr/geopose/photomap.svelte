@@ -107,6 +107,7 @@
                         },
                     });
 
+                    // Handler for translucency toggle for the photo
                     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
                     handler.setInputAction(movement => {
                         const pickedObject = viewer.scene.pick(movement.position);
@@ -117,7 +118,8 @@
                         }
                     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-                     viewer.entities.add({
+                    // Add frustum
+                    viewer.entities.add({
                        position: higher_position,
                        orientation: orientation,
                        model: {
