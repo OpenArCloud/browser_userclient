@@ -197,8 +197,8 @@
         fetch('/photos/seattle_gps.jpg')
             .then(response => response.arrayBuffer())
             .then(buffer => {
-                preview.src = $imageDataBase64;
                 imageDataBase64.set('data:image/jpeg;base64,' + btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')));
+                preview.src = $imageDataBase64;
                 filename = 'seattle.jpg';
             })
     }
