@@ -32,16 +32,41 @@
     let viewer;
     let isPhotoTranslucent = false;
 
+    let flags = {
+        looking: false,
+        moveForward: false,
+        moveBackward: false,
+        moveUp: false,
+        moveDown: false,
+        moveLeft: false,
+        moveRight: false,
+    };
+
     const planeSize = $imageRotation !== 'none' ? [2, 3.54] : [3.54, 2]
 
 
     onMount(() => {
+        // Straight from Cesium sample code...
+        document.addEventListener("keydown", (e) => {
+                const flagName = getFlagForKeyCode(e.keyCode);
+                if (typeof flagName !== "undefined") flags[flagName] = true;
+            }, false
+        );
+
+        document.addEventListener("keyup", (e) => {
+                const flagName = getFlagForKeyCode(e.keyCode);
+                if (typeof flagName !== "undefined") flags[flagName] = false;
+            }, false
+        );
+
         const terrainProvider = Cesium.createWorldTerrain();
 
         viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: terrainProvider,
             showRenderLoopErrors: true,
         });
+
+        viewer.canvas.focus();
 
         if ($geopose.ecef !== undefined) {
             const positions = [Cesium.Cartographic.fromCartesian(
@@ -118,6 +143,22 @@
                         }
                     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+                    viewer.clock.onTick.addEventListener(() => {
+                        const camera = viewer.camera;
+
+                        // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
+                        const ellipsoid = viewer.scene.globe.ellipsoid;
+                        const cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
+                        const moveRate = cameraHeight / 100.0;
+
+                        if (flags.moveForward) camera.moveForward(moveRate);
+                        if (flags.moveBackward) camera.moveBackward(moveRate);
+                        if (flags.moveUp) camera.moveUp(moveRate);
+                        if (flags.moveDown) camera.moveDown(moveRate);
+                        if (flags.moveLeft) camera.moveLeft(moveRate);
+                        if (flags.moveRight) camera.moveRight(moveRate);
+                    });
+
                     // Add frustum
                     viewer.entities.add({
                        position: higher_position,
@@ -134,10 +175,25 @@
             $goto('../localizephoto');
         }
     })
+
+    function getFlagForKeyCode(keyCode) {
+        switch (keyCode) {
+            case 38: // up arrow key
+                return "moveForward";
+            case 40:  // down arrow key
+                return "moveBackward";
+            case 39: // right arrow key
+                return "moveRight";
+            case 37: // left arrow key
+                return "moveLeft";
+            default:
+                return undefined;
+        }
+    }
 </script>
 
 
-<div id="cesiumContainer"></div>
+<div id="cesiumContainer" tabindex="0"></div>
 
 
 <svelte:head>
