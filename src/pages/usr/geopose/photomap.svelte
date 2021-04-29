@@ -68,9 +68,9 @@
 
         viewer.canvas.focus();
 
-        if ($geopose.ecef !== undefined) {
+        if ($geopose.ecefPose !== undefined) {
             const positions = [Cesium.Cartographic.fromCartesian(
-                new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z))];
+                new Cesium.Cartesian3($geopose.ecefPose.position.x, $geopose.ecefPose.position.y, $geopose.ecefPose.position.z))];
 
             Cesium.sampleTerrainMostDetailed(terrainProvider, positions)
                 .then(updatedPositions => {
@@ -80,9 +80,9 @@
                     viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
                     // Convert base of coordinates from GeoPose to what Cesium needs
-                    const position = new Cesium.Cartesian3($geopose.ecef.x, $geopose.ecef.y, $geopose.ecef.z);
-                    const orientation = new Cesium.Quaternion($geopose.ecef.quaternion[0],
-                        $geopose.ecef.quaternion[1], $geopose.ecef.quaternion[2], $geopose.ecef.quaternion[3]);
+                    const position = new Cesium.Cartesian3($geopose.ecefPose.position.x, $geopose.ecefPose.position.y, $geopose.ecefPose.position.z);
+                    const orientation = new Cesium.Quaternion($geopose.ecefPose.orientation.x,
+                        $geopose.ecefPose.orientation.y, $geopose.ecefPose.orientation.z, $geopose.ecefPose.orientation.w);
 
                     const local2fixed = Cesium.Transforms.northWestUpToFixedFrame(position);
 
