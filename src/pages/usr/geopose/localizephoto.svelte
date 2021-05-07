@@ -133,7 +133,7 @@
                     return url;
                 } else {
                     // no ssd available in the requested country. Using Augmented City as a fallback for now
-                    return 'http://developer.augmented.city';
+                    return 'https://developer.augmented.city';
                 }
             })
     }
