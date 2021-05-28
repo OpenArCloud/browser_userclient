@@ -84,7 +84,7 @@
                     const orientation = new Cesium.Quaternion($geopose.ecefPose.orientation.x,
                         $geopose.ecefPose.orientation.y, $geopose.ecefPose.orientation.z, $geopose.ecefPose.orientation.w);
 
-                    const local2fixed = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+                    const local2fixed = Cesium.Transforms.northWestUpToFixedFrame(position);
 
                     // TODO: Adapt when more accurate height is sent from GeoPose service
                     const higher_position = Cesium.Matrix4.multiplyByPoint(local2fixed,
@@ -108,7 +108,7 @@
                         }
                     });
 
-                    const normal =  new Cesium.Cartesian3(0, -1.0, 0.0);
+                    const normal =  new Cesium.Cartesian3(-1.0, 0.0, 0.0);
 
                     let planeOrientation = orientation;
                     if ($imageRotation !== 'none') {
@@ -162,9 +162,7 @@
                     // Add frustum
                     viewer.entities.add({
                        position: higher_position,
-                       orientation:
-                           Cesium.Quaternion.multiply(planeOrientation,
-                               Cesium.Quaternion.fromAxisAngle(new Cesium.Cartesian3(0.0, 0.0, 1.0), Math.PI /2), {}),
+                       orientation: orientation,
                        model: {
                          uri: '/content/frustum.gltf',
                          scale: 0.01,

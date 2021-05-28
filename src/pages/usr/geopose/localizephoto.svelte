@@ -45,7 +45,7 @@
     import { geopose, imageDataBase64, imageRotation } from "./geoposestore.js";
 
     import { getServicesAtLocation } from 'ssd-access';
-    import { sendRequest, objectEndpoint, validateRequest } from 'gpp-access';
+    import { sendRequest, validateRequest } from 'gpp-access';
     import GeoPoseRequest from 'gpp-access/request/GeoPoseRequest.js';
     import ImageOrientation from 'gpp-access/request/options/ImageOrientation.js';
     import { IMAGEFORMAT } from 'gpp-access/GppGlobals.js';
@@ -95,7 +95,7 @@
 
         // Services haven't implemented recent changes to the protocol yet
         validateRequest(false);
-        sendRequest(`${serviceUrl}/${objectEndpoint}`, JSON.stringify(geoPoseRequest))
+        sendRequest(`${serviceUrl}/scrs/geopose_objs_local`, JSON.stringify(geoPoseRequest))
             .then(data => {
                 isGeoposeLoaded = true;
                 accessingGeoPoseServer = false;
